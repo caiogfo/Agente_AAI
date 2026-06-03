@@ -9,7 +9,8 @@
   },
   "advisor": {
     "code": "A7699",
-    "name": "Antonio Bicudo"
+    "name": "Antonio Bicudo",
+    "gender": "M"
   },
   "totals": {
     "patrimonio_total": 386858.82,

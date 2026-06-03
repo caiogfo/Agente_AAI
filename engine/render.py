@@ -122,7 +122,7 @@ def _header_footer(canvas, doc):
     canvas.setFont("Helvetica-Bold", 7.5)
     canvas.setFillColor(_blk)
     canvas.drawRightString(PAGE_W - MARGIN, FOOTER_H - 6 * mm,
-                           f"{facts['advisor']['name']} · Assessor {facts['advisor']['code']}")
+                           f"{facts['advisor']['name']} · {facts['advisor']['title']} {facts['advisor']['code']}")
     canvas.setFont("Helvetica", 7)
     canvas.setFillColor(_gray)
     canvas.drawRightString(PAGE_W - MARGIN, FOOTER_H - 9 * mm, f"Página {doc.page}")
@@ -305,7 +305,7 @@ def render_letter(facts: dict, narrative: dict, chart_paths: dict,
     story.append(Spacer(1, 6))
     story.append(Paragraph("Atenciosamente,", S["body"]))
     story.append(Paragraph(facts["advisor"]["name"], S["sign"]))
-    story.append(Paragraph(f'Assessor de Investimentos · Código {facts["advisor"]["code"]}',
+    story.append(Paragraph(f'{facts["advisor"]["title"]} de Investimentos · Código {facts["advisor"]["code"]}',
                            S["kpi_lbl"]))
 
     doc.build(story)
