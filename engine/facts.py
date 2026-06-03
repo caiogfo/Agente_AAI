@@ -1,0 +1,142 @@
+"""Build the grounded FACTS object — the single contract the narration consumes.
+
+The LLM (and the Rivet graph) receive ONLY this object and must not introduce any
+number that is not present here. This is what kills the v1 hallucinations.
+"""
+from __future__ import annotations
+
+import datetime as dt
+import json
+from dataclasses import asdict
+
+from . import config
+from .data_loader import ClientModel, load_client
+from .market_data import get_benchmarks
+from .profitability import ProfitabilityResult, compute
+from .recommendations import RecommendationSet, analyze
+
+
+def _round(x, n=2):
+    return None if x is None else round(float(x), n)
+
+
+def build_facts(model: ClientModel | None = None) -> dict:
+    model = model or load_client()
+    bench = get_benchmarks()
+    prof: ProfitabilityResult = compute(model, bench["cdi_month_pct"], bench["ipca_month_pct"])
+    recs: RecommendationSet = analyze(model, prof)
+
+    # allocation by class (% and BRL)
+    alloc: dict[str, dict] = {}
+    for p in model.positions:
+        a = alloc.setdefault(p.asset_class, {"pct": 0.0, "brl": 0.0})
+        a["pct"] += p.alloc_pct
+        a["brl"] += p.position_brl
+    allocation = [{"asset_class": k, "pct": _round(v["pct"]), "brl": _round(v["brl"], 2)}
+                  for k, v in alloc.items()]
+
+    # measured stock legs -> month highlights
+    stock_legs = [l for l in prof.legs if l.asset_class == "Acoes"]
+    best = max(stock_legs, key=lambda l: l.monthly_return_pct)
+    worst = min(stock_legs, key=lambda l: l.monthly_return_pct)
+
+    legs = [{
+        "name": l.name, "asset_class": l.asset_class, "alloc_pct": _round(l.alloc_pct),
+        "monthly_return_pct": _round(l.monthly_return_pct), "is_estimate": l.is_estimate,
+        "contribution_pp": _round(l.contribution_pp, 3),
+        "since_inception_return_pct": _round(l.since_inception_return_pct),
+        "basis": l.basis,
+    } for l in prof.legs]
+
+    facts = {
+        "meta": {
+            "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
+            "reference_month_label": prof.reference_month_label,
+            "snapshot_date": config.SNAPSHOT_DATE.isoformat(),
+            "macro_report_date": config.MACRO_DATE.isoformat(),
+            "currency": "BRL",
+            "language_letter": "pt-BR",
+        },
+        "client": {
+            "first_name": model.client["first_name"],
+            "full_name": model.client["full_name"],
+            "account": model.client["account"],
+            "risk_profile": model.client.get("risk_profile", "Moderado"),
+        },
+        "advisor": {"name": model.advisor["name"], "code": model.advisor["code"]},
+        "totals": {
+            "patrimony_brl": _round(model.patrimony, 2),
+            "invested_brl": _round(model.invested, 2),
+            "cash_brl": _round(model.cash, 2),
+            "cash_ratio_pct": _round(recs.cash_ratio_pct),
+        },
+        "allocation": allocation,
+        "performance": {
+            "total_return_pct": _round(prof.total_return_pct),
+            "total_is_estimate": prof.total_is_estimate,
+            "equities_return_pct": _round(prof.equities_return_pct),
+            "fixed_income_return_pct": _round(prof.fixed_income_return_pct),
+            "funds_return_pct_est": _round(prof.class_returns_pct.get("Fundos")),
+            "real_return_pct": _round(prof.real_return_pct),
+            "excess_cdi_pp": _round(prof.excess_cdi_pp),
+            "covered_alloc_pct": _round(prof.covered_alloc_pct),
+            "legs": legs,
+            "highlight_best": {"ticker": best.name, "monthly_return_pct": _round(best.monthly_return_pct)},
+            "highlight_worst": {"ticker": worst.name, "monthly_return_pct": _round(worst.monthly_return_pct)},
+        },
+        "benchmarks": {
+            "cdi_month_pct": _round(bench["cdi_month_pct"]),
+            "ipca_month_pct": _round(bench["ipca_month_pct"]),
+            "ibov_month_pct": _round(bench["ibov_month_pct"]),
+            "sp500_month_pct": _round(bench["sp500_month_pct"]),
+            "equities_vs_ibov_pp": _round(prof.equities_return_pct - bench["ibov_month_pct"]),
+        },
+        "macro": dict(config.MACRO_FACTS),
+        "recommendations": [{
+            "action": r.action, "target": r.target, "headline": r.headline,
+            "rationale": r.rationale, "priority": r.priority,
+            "amount_brl": _round(r.amount_brl, 2), "tags": r.tags,
+        } for r in recs.recommendations],
+        "rebalance": [{
+            "asset_class": rb.asset_class, "current_pct": _round(rb.current_pct),
+            "target_pct": _round(rb.target_pct), "delta_pct": _round(rb.delta_pct),
+            "delta_brl": _round(rb.delta_brl, 2),
+        } for rb in recs.rebalance],
+        "methodology_notes": [
+            "Acoes: retorno do mes = preco atual / preco do mes anterior (CSV fornecido).",
+            "Renda Fixa: IPCA real do mes (BCB) capitalizado com o spread contratual (pro-rata).",
+            "Fundos: cota mensal nao consta nos dados fornecidos; retorno do mes e ESTIMATIVA "
+            "(proxy CDI) e esta sinalizado. Retornos 'desde a compra' sao exibidos a parte.",
+            "Benchmarks: CDI e IPCA do BCB (SGS); Ibovespa e S&P 500 do Yahoo Finance (mes-calendario).",
+            "Macro: numeros transcritos do relatorio XP de 06/02/2025 (nao estimados pelo modelo).",
+            f"Janela de comparacao: os precos das acoes refletem o extrato de "
+            f"{config.SNAPSHOT_DATE.strftime('%d/%m/%Y')}, enquanto os benchmarks usam o "
+            f"fechamento do mes de referencia; por isso as janelas podem diferir ligeiramente.",
+        ],
+        "period_disclaimer": (
+            f"Os precos das acoes refletem o extrato de "
+            f"{config.SNAPSHOT_DATE.strftime('%d/%m/%Y')}; os indicadores de mercado (CDI, "
+            f"IPCA, Ibovespa, S&P 500) usam o fechamento do mes de referencia. As janelas de "
+            f"comparacao podem, portanto, diferir ligeiramente."
+        ),
+        "disclaimer": (
+            "Material de carater informativo, sem oferta de compra/venda. Rentabilidade passada "
+            "nao garante resultados futuros. Numeros de fundos refletem dados fornecidos; "
+            "estimativas estao sinalizadas. Identidade visual em estilo XP (emulacao)."
+        ),
+    }
+    return facts
+
+
+def save_facts(path=None) -> dict:
+    facts = build_facts()
+    path = path or (config.BUILD_DIR / "facts.json")
+    config.BUILD_DIR.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(facts, indent=2, ensure_ascii=False))
+    return facts
+
+
+if __name__ == "__main__":
+    f = save_facts()
+    print(json.dumps(f, indent=2, ensure_ascii=False)[:1600])
+    print("...\n[facts.json saved to build/]")

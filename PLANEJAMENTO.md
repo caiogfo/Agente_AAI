@@ -102,6 +102,12 @@ Benchmarks reais (BCB, abr/2025): **CDI 1,06%**, **IPCA 0,43%** → retorno real
 **+1,26 p.p. vs CDI**. Cobertura apurada (sem estimativa): **32,29%** do investido.
 Destaques do mês: **HAPV3 +76,4%** (recuperação) e **MRFG3 −16,4%**.
 
+> **Disclaimer de janela (também impresso na carta).** Os preços das ações refletem o
+> **extrato de 07/05/2025**; os indicadores de mercado (CDI, IPCA, Ibovespa, S&P 500) usam o
+> **fechamento do mês de referência**. Por isso as janelas de comparação podem diferir
+> ligeiramente — optamos por usar os fechamentos disponíveis em vez do dia específico, com
+> esta ressalva explícita na documentação e no relatório do cliente.
+
 ---
 
 ## 6. Plano de execução (subfases + checkpoints Git)
