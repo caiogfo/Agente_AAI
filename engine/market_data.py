@@ -23,11 +23,16 @@ _CACHE = config.BUILD_DIR / "market_cache.json"
 _TIMEOUT = 20
 
 # Documented fallbacks (real values, so offline runs stay correct for the case
-# month). CDI/IPCA accrued in April 2025 per BCB SGS.
+# month). CDI/IPCA per BCB SGS; equity indices (calendar-month) per Yahoo Finance.
 _FALLBACK = {
     "cdi_month:2025-04": 1.06,
     "ipca_month:2025-04": 0.43,
+    "index_month:^BVSP:2025-04": 3.69,   # Ibovespa, April 2025
+    "index_month:^GSPC:2025-04": -0.76,  # S&P 500 (USD), April 2025
 }
+
+# Friendly labels for indices.
+INDEX_LABELS = {"^BVSP": "Ibovespa", "^GSPC": "S&P 500"}
 
 
 def _load_cache() -> dict:
@@ -80,6 +85,55 @@ def get_monthly_benchmark(kind: str, month: dt.date = config.REFERENCE_MONTH,
         if key in _FALLBACK:
             return _FALLBACK[key]
         raise
+
+
+def get_index_month_return(symbol: str, month: dt.date = config.REFERENCE_MONTH,
+                           use_cache: bool = True) -> float:
+    """Calendar-month % return of an equity index via Yahoo Finance.
+
+    April return = close(April bar) / close(March bar) - 1. Cached; falls back to
+    documented real values so the pipeline stays reproducible offline.
+    """
+    key = f"index_month:{symbol}:{month:%Y-%m}"
+    cache = _load_cache()
+    if use_cache and key in cache:
+        return cache[key]
+    try:
+        import yfinance as yf  # imported lazily; optional dependency
+
+        prev = (month.replace(day=1) - dt.timedelta(days=1)).replace(day=1)
+        start = (prev.replace(day=1) - dt.timedelta(days=10))
+        end = (month.replace(day=28) + dt.timedelta(days=10))
+        df = yf.download(symbol, start=f"{start:%Y-%m-%d}", end=f"{end:%Y-%m-%d}",
+                         interval="1mo", progress=False, auto_adjust=False)
+        closes = df["Close"].squeeze().dropna()      # -> 1-D Series
+        tags = closes.index.strftime("%Y-%m")
+
+        def _close_for(ym: str) -> float:
+            vals = closes[tags == ym].to_numpy().ravel()
+            return float(vals[-1])
+
+        c_prev = _close_for(f"{prev:%Y-%m}")
+        c_cur = _close_for(f"{month:%Y-%m}")
+        val = (c_cur / c_prev - 1.0) * 100.0
+        cache[key] = round(val, 4)
+        _save_cache(cache)
+        return cache[key]
+    except Exception:
+        if key in _FALLBACK:
+            return _FALLBACK[key]
+        raise
+
+
+def get_benchmarks(month: dt.date = config.REFERENCE_MONTH) -> dict:
+    """All benchmarks for the case month: CDI, IPCA (BCB) + Ibovespa, S&P500 (Yahoo)."""
+    return {
+        "cdi_month_pct": get_monthly_benchmark("cdi_month", month),
+        "ipca_month_pct": get_monthly_benchmark("ipca_month", month),
+        "ibov_month_pct": get_index_month_return("^BVSP", month),
+        "sp500_month_pct": get_index_month_return("^GSPC", month),
+        "month_label": config.REFERENCE_MONTH_LABEL_PT,
+    }
 
 
 def get_live_quotes(tickers: list[str]) -> dict[str, dict]:
