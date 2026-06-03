@@ -18,15 +18,25 @@ do perfil de risco e da macro da casa.
 - Benchmarks reais: **CDI 1,06%**, **IPCA 0,43%**, **Ibovespa +3,69%**, **S&P 500 −0,76%**.
 - Carta final: `Output/albert_da_silva_relatorio_mensal.pdf` (2 páginas, datada de **12/05/2025**).
 
-## Início rápido (2 comandos)
+## Início rápido (3 passos)
 
-> Pré-requisito: Python 3.9+. **Não precisa de chave de API** — sem chave, a narração
-> usa o fallback determinístico e a carta sai igual em estrutura e números.
+> Pré-requisito: Python 3.9+.
 
 ```bash
-make setup     # cria o venv e instala as dependências
-make run       # gera a carta do Albert em Output/
+# 1. Ambiente (cria o venv, instala deps e gera um arquivo .env)
+make setup
+
+# 2. Cole a chave da Anthropic no arquivo .env (que o passo 1 criou):
+#    ANTHROPIC_API_KEY=sk-ant-...        <- a chave que você recebeu
+#    (pode abrir o .env em qualquer editor; é só colar e salvar)
+
+# 3. Gere a carta
+make run        # cliente único (Albert) -> Output/
 ```
+
+> **Sem a chave também roda:** se o `.env` ficar sem chave, a narração usa o fallback
+> determinístico e a carta sai igual em estrutura e números. A chave só faz o Claude
+> escrever o texto. (OpenAI também é aceito via `OPENAI_API_KEY`.)
 
 Outros atalhos (rode `make help` para ver todos):
 
@@ -36,10 +46,6 @@ make ingest    # demonstra a ingestão do extrato real + reconciliação
 make test      # roda os 42 testes
 make clean     # remove artefatos gerados
 ```
-
-**Narração com LLM (opcional).** Para que o Claude escreva a carta (em vez do fallback),
-crie um arquivo `.env` na raiz (veja `.env.example`) com `ANTHROPIC_API_KEY=...` e rode
-`make run` de novo. OpenAI também é suportado via `OPENAI_API_KEY`.
 
 <details><summary>Sem <code>make</code>? Os comandos equivalentes</summary>
 

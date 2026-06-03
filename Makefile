@@ -14,9 +14,12 @@ help:            ## Lista os comandos disponíveis
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN{FS=":.*?## "}{printf "  make %-10s %s\n", $$1, $$2}'
 
-setup:           ## Cria o venv e instala as dependências
+setup:           ## Cria o venv, instala as dependências e prepara o .env
 	python3 -m venv .venv && $(PIP) install --quiet --upgrade pip && $(PIP) install -r requirements.txt
-	@echo "✓ Ambiente pronto. Rode: make run"
+	@test -f .env || cp .env.example .env
+	@echo "✓ Ambiente pronto."
+	@echo "  → Cole a ANTHROPIC_API_KEY no arquivo .env (já criado) e rode: make run"
+	@echo "  → Sem chave também funciona (narração determinística)."
 
 run:             ## Gera a carta do cliente padrão (Albert)
 	$(PY) -m engine.run
