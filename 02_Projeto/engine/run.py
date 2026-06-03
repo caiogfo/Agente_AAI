@@ -29,10 +29,25 @@ from .narrate import build_narrative
 from .render import render_letter
 
 
+_PT_MONTH_ABBREV = {
+    "janeiro": "jan", "fevereiro": "fev", "março": "mar", "abril": "abr",
+    "maio": "mai", "junho": "jun", "julho": "jul", "agosto": "ago",
+    "setembro": "set", "outubro": "out", "novembro": "nov", "dezembro": "dez",
+}
+
+
 def _slug(name: str) -> str:
     """File-safe slug from a client name (e.g. 'Albert da Silva' -> 'albert_da_silva')."""
     norm = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]+", "_", norm.lower()).strip("_") or "cliente"
+
+
+def _month_slug(reference_month_label: str) -> str:
+    """'abril de 2025' -> 'abr25'"""
+    parts = reference_month_label.lower().split()  # ['abril', 'de', '2025']
+    month_abbrev = _PT_MONTH_ABBREV.get(parts[0], parts[0][:3])
+    year_short = parts[-1][-2:]
+    return f"{month_abbrev}{year_short}"
 
 
 def generate_one(portfolio_json: Path, use_llm: bool, emit_facts: bool = False,
@@ -57,7 +72,8 @@ def generate_one(portfolio_json: Path, use_llm: bool, emit_facts: bool = False,
 
     charts = build_all(facts, prefix=f"{slug}_")          # namespaced per client
     narrative = build_narrative(facts, use_llm=use_llm)
-    out = Path(out) if out else (config.OUTPUT_DIR / f"{slug}_relatorio_mensal.pdf")
+    month = _month_slug(facts["meta"]["reference_month_label"])
+    out = Path(out) if out else (config.OUTPUT_DIR / f"{slug}_relatorio_{month}.pdf")
     render_letter(facts, narrative, charts, out)
 
     p = facts["performance"]
