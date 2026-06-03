@@ -5,7 +5,7 @@
 
 PY  := .venv/bin/python
 PIP := .venv/bin/pip
-STATEMENT := Input/XP - Albert_s portfolio.txt
+STATEMENT := ../01_Insumos_do_case/XP - Albert_s portfolio.txt
 
 .PHONY: help setup run batch ingest test clean
 .DEFAULT_GOAL := help

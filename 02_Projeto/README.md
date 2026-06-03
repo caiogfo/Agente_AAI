@@ -7,11 +7,15 @@ do perfil de risco e da macro da casa.
 **Princípio:** um motor Python **determinístico e testado** calcula tudo e produz um
 `facts.json`; o LLM (Claude) apenas **narra** os fatos e nunca inventa um número.
 
-> 🟢 **Quer só rodar?** Siga o **[GUIA_RAPIDO.md](GUIA_RAPIDO.md)** — passo a passo
-> direto (ambiente, chave, gerar a carta, rodar o Rivet), com cada comando comentado.
+> 📁 **Este README fica em `02_Projeto/`** — onde todo o código roda. A raiz do
+> repositório guarda os entregáveis: a carta pronta, o `COMO_RODAR.md` e o `REPORT.md`;
+> os insumos do case em `01_Insumos_do_case/` e os grafos em `03_Rivet/`.
 
-> 📄 Leia `PLANEJAMENTO.md` (documentação completa + diagnóstico do v1) e `REPORT.md`
-> (entregável: problemas, abordagem, próximos passos).
+> 🟢 **Quer só rodar?** Siga o **[COMO_RODAR.md](../COMO_RODAR.md)** (na raiz) — passo a
+> passo direto (ambiente, chave, gerar a carta, rodar o Rivet), com cada comando comentado.
+
+> 📄 Leia `../04_Planejamento/PLANEJAMENTO.md` (documentação completa + diagnóstico do v1)
+> e `../REPORT.md` (entregável: problemas, abordagem, próximos passos).
 
 ## Resultado (Albert, abril/2025)
 
@@ -63,13 +67,13 @@ python -m pytest -q             # testes
 
 ## Fluxo Rivet (grounded)
 
-`enter_challenge.rivet-project` é a versão **corrigida e completa** do grafo (o v1 está em
-`enter_challenge_v1_backup.rivet-project`). Para usá-lo:
+`../03_Rivet/enter_challenge.rivet-project` é a versão **corrigida e completa** do grafo
+(o v1 está em `../03_Rivet/enter_challenge_v1_backup.rivet-project`). Para usá-lo:
 
 1. `python -m engine.run --emit-facts` → gera `build/facts.json`.
-2. Abra o `.rivet-project` no [Rivet](https://rivet.ironcladapp.com/) e configure a
-   **Anthropic API key** em *Settings*.
-3. Rode o grafo `main_challenge`: ele lê `build/facts.json` + a macro, narra performance /
+2. Abra o `.rivet-project` (em `../03_Rivet/`) no [Rivet](https://rivet.ironcladapp.com/) e
+   configure a **Anthropic API key** em *Settings*.
+3. Rode o grafo `main_challenge_v2`: ele lê `build/facts.json` + a macro, narra performance /
    macro / recomendações e integra tudo na **carta final em português**.
 
 **Rodar o grafo headless (sem abrir o app):** há um runner Node em `rivet_runner/` que usa
@@ -88,28 +92,37 @@ Correções do v1 embutidas no grafo: sem caminhos `C:\Users\...`; macro restrit
 cliente parametrizado (Albert, não "João"); nós **Anthropic Claude (`claude-sonnet-4-6`, o
 modelo validado com a chave da conta)** com prompts **grounded** no `facts.json` (em vez de
 texto cru a temp 0,5). O logo do header usa
-`Input/XP_Investimentos_logo.png`.
+`../01_Insumos_do_case/XP_Investimentos_logo.png`.
 
 ## Estrutura
 
+Visão do repositório (a raiz guarda os entregáveis; o código vive em `02_Projeto/`):
+
 ```
-engine/            # motor determinístico + narração + render
-  config.py        # datas do case, política do perfil, séries BCB
-  data_loader.py   # extrato (JSON) + preços (CSV)
-  market_data.py   # BCB (CDI/IPCA) + Yahoo (Ibovespa/S&P) + brapi (--live)
-  profitability.py # retorno do mês: apurado vs estimado
-  recommendations.py # motor rule-based (compra/venda/rebalance)
-  facts.py         # contrato de grounding (facts.json)
-  ingest.py        # extrato (texto) -> JSON via LLM + reconciliação determinística
-  charts.py        # gráficos paleta XP
-  brand.py         # tokens de marca XP
-  llm.py / narrate.py # Claude + fallback determinístico (perfil-aware)
-  render.py        # PDF de 2 páginas (reportlab)
-  run.py           # CLI: cliente único ou --all (lote)
-  tests/           # 42 testes (inclui multi-cliente/perfil e ingestão)
-data/              # 1 JSON por cliente (Albert + Beatriz demo); mesmo schema
-Input/ Output/     # insumos do case e carta gerada
-*.rivet-project    # grafo v2 (corrigido) + backup do v1
+Carta_Final_Cliente_Albert.pdf   # carta pronta (entregável)
+COMO_RODAR.md · REPORT.md        # guia de execução + resumo do case
+01_Insumos_do_case/              # extrato, macro, perfil, CSV de preços, logo, briefing
+03_Rivet/                        # grafo v2 (corrigido) + backup do v1
+04_Planejamento/                 # PLANEJAMENTO.md
+02_Projeto/                      # ← TODO o código roda aqui
+  engine/            # motor determinístico + narração + render
+    config.py        # datas do case, política do perfil, séries BCB, caminhos
+    data_loader.py   # extrato (JSON) + preços (CSV)
+    market_data.py   # BCB (CDI/IPCA) + Yahoo (Ibovespa/S&P) + brapi (--live)
+    profitability.py # retorno do mês: apurado vs estimado
+    recommendations.py # motor rule-based (compra/venda/rebalance)
+    facts.py         # contrato de grounding (facts.json)
+    ingest.py        # extrato (texto) -> JSON via LLM + reconciliação determinística
+    charts.py        # gráficos paleta XP
+    brand.py         # tokens de marca XP
+    llm.py / narrate.py # Claude + fallback determinístico (perfil-aware)
+    render.py        # PDF de 2 páginas (reportlab)
+    run.py           # CLI: cliente único ou --all (lote)
+    tests/           # 42 testes (inclui multi-cliente/perfil e ingestão)
+  data/              # 1 JSON por cliente (Albert + Beatriz demo); mesmo schema
+  Output/            # cartas geradas
+  rivet_runner/      # runner Node headless do grafo Rivet
+  Makefile · requirements.txt · .env.example
 ```
 
 ## Entrega e escalabilidade (como submeter o case)
@@ -121,8 +134,8 @@ inventa número — separar cálculo de narração é o que mata a alucinação 
 entregável do case é o projeto inteiro**, não apenas o `.rivet-project`:
 
 ```
-engine/  (cálculo + render)  →  build/facts.json  →  enter_challenge.rivet-project (narração)
-        + data/ + Input/ + Output/ + README.md + REPORT.md + PLANEJAMENTO.md
+02_Projeto/engine/ (cálculo + render) → build/facts.json → 03_Rivet/enter_challenge.rivet-project (narração)
+        + 02_Projeto/data/ + 01_Insumos_do_case/ + 02_Projeto/Output/ + REPORT.md + 04_Planejamento/
 ```
 
 Sugestão de submissão: o repositório Git completo (ou um zip) com `REPORT.md` como porta de
@@ -146,7 +159,8 @@ cliente (cálculos **e** análises), nomeada por cliente em `Output/`.
 - **Cálculos compartilhados rodam uma vez:** preços (CSV), CDI/IPCA (BCB) e Ibovespa/S&P (Yahoo)
   são dados de mercado comuns ao mês; o que muda por cliente é o portfólio. Gráficos são
   namespaced por cliente (sem colisão em lote).
-- **Ingestão automática (sem transcrição manual):** `python -m engine.ingest "Input/XP - Albert_s portfolio.txt"`
+- **Ingestão automática (sem transcrição manual):** `make ingest` (ou
+  `python -m engine.ingest "../01_Insumos_do_case/XP - Albert_s portfolio.txt"`)
   lê o extrato e o estrutura em JSON via LLM, com **reconciliação determinística** que confere os
   totais ao centavo (soma das posições == investido; investido+caixa == patrimônio; % de cada
   posição == fatia do investido). Se não bate, **rejeita para revisão** em vez de aceitar número
@@ -157,17 +171,17 @@ cliente (cálculos **e** análises), nomeada por cliente em `Output/`.
 Como os dados são consumidos, de forma idêntica e escalável, para clientes diferentes:
 
 ```
-Input do cliente (extrato)                  Pipeline (igual para todos)            Saída
-──────────────────────────                  ───────────────────────────           ─────────────────────────────
-Albert  → extrato real (Input/*.txt)  ─►  ingest.py (LLM + reconciliação)  ─┐
-                                                                            ├─► run.py --all ─► engine/ ─► carta PDF
-Beatriz → 2º cliente já estruturado   ─────────────────────────────────────┘     (cálculo + análise + narração)
+Input do cliente (extrato)                       Pipeline (igual para todos)            Saída
+──────────────────────────                       ───────────────────────────           ─────────────────────────────
+Albert  → extrato real                      ─►  ingest.py (LLM + reconciliação)  ─┐
+          (01_Insumos_do_case/*.txt)                                              ├─► run.py --all ─► engine/ ─► carta PDF
+Beatriz → 2º cliente já estruturado         ────────────────────────────────────┘     (cálculo + análise + narração)
           (data/beatriz_almeida_portfolio.json)
 ```
 
 | | **Albert da Silva** | **Beatriz Almeida** |
 |---|---|---|
-| Input | extrato real XP (`Input/`), via `ingest.py` | JSON estruturado (`data/`), 2º cliente demo |
+| Input | extrato real XP (`01_Insumos_do_case/`), via `ingest.py` | JSON estruturado (`data/`), 2º cliente demo |
 | Perfil | Conservador | Moderado |
 | Assessor | Antonio Bicudo (A7699) | Carla Menezes (B1234) |
 | Patrimônio | R$ 386.858,82 | R$ 500.202,50 |

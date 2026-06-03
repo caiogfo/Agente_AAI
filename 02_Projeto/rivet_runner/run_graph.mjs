@@ -1,6 +1,6 @@
 // Headless runner for the corrected Rivet graph (Anthropic Claude).
 //
-// Usage (from the repo root, so relative file reads resolve):
+// Usage (run from 02_Projeto/, so relative file reads resolve):
 //   python -m engine.run --emit-facts        # produce build/facts.json
 //   node --env-file=.env rivet_runner/run_graph.mjs
 //
@@ -16,10 +16,11 @@ import {
 } from '@ironclad/rivet-node';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, '..');
-process.chdir(repoRoot); // so the readFile node resolves build/facts.json, Input/...
+const projectRoot = path.resolve(__dirname, '..');        // 02_Projeto/
+process.chdir(projectRoot); // so the readFile nodes resolve build/facts.json and ../01_Insumos_do_case/...
 
-const PROJECT = path.join(repoRoot, 'enter_challenge.rivet-project');
+// The Rivet graphs live in a sibling folder at the repo root (03_Rivet/).
+const PROJECT = path.resolve(projectRoot, '..', '03_Rivet', 'enter_challenge.rivet-project');
 const GRAPH = 'main_challenge_v2';
 
 if (!process.env.ANTHROPIC_API_KEY) {

@@ -101,4 +101,6 @@ sempre rotuladas como premissas, e testes A/B de NPS por estilo de carta.
 
 ---
 *Stack: Python (pandas, matplotlib, reportlab), BCB e Yahoo Finance, Anthropic Claude no
-Rivet. Como rodar: `python -m engine.run` (ver `README.md`).*
+Rivet. Como rodar: ver `COMO_RODAR.md` na raiz (resumo: `cd 02_Projeto && make setup &&
+make run`). Organização: insumos do case em `01_Insumos_do_case/`, projeto em
+`02_Projeto/`, grafos em `03_Rivet/`.*

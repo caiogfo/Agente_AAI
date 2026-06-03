@@ -6,5 +6,5 @@ build/
 .env
 *.egg-info/
 .pytest_cache/
-rivet_runner/node_modules/
-rivet_runner/package-lock.json
+node_modules/
+package-lock.json

@@ -36,7 +36,7 @@ data:
           visualData: 380/200/280/2//
         '[macroPath]:text "Macro Path"':
           data:
-            text: Input/XP - Macro analysis.txt
+            text: ../01_Insumos_do_case/XP - Macro analysis.txt
           outgoingConnections:
             - output->"Read Macro" macroRead/path
           visualData: 10/680/330/3//
