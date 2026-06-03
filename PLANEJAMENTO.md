@@ -1,7 +1,7 @@
 # PLANEJAMENTO — AI Financial Advisor para clientes XP (case Enter)
 
 > Documento de planejamento e documentação completa do material do case.
-> Autor da solução: candidato (case técnico Enter). Cliente tema: XP Investimentos.
+> Autor da solução: Caio Gomes (case técnico Enter). Cliente tema: XP Investimentos.
 
 ---
 
@@ -115,11 +115,6 @@ Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
 > sem nunca afirmar que algo "não foi fornecido".
 
 > **Disclaimer de janela (também impresso na carta).** Os preços das ações refletem o
-> **extrato de 07/05/2025**; os indicadores de mercado usam o **fechamento do mês de
-> referência**. As janelas podem diferir ligeiramente, com esta ressalva explícita na
-> documentação e no relatório do cliente.
-
-> **Disclaimer de janela (também impresso na carta).** Os preços das ações refletem o
 > **extrato de 07/05/2025**; os indicadores de mercado (CDI, IPCA, Ibovespa, S&P 500) usam o
 > **fechamento do mês de referência**. Por isso as janelas de comparação podem diferir
 > ligeiramente — optamos por usar os fechamentos disponíveis em vez do dia específico, com
@@ -139,8 +134,9 @@ Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
 - [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(42 testes ok)**
 
 ## 6.1. Ajustes solicitados (rodadas seguintes)
-- **Provider:** validado com chave real. Narração Python via Claude; **grafo Rivet usa Opus
-  (`claude-opus-4-8`)** por pedido do usuário. Código provider-flexível (OpenAI também).
+- **Provider:** validado com chave real. Tanto a narração Python quanto o **grafo Rivet usam
+  `claude-sonnet-4-6`** — o modelo confirmado como disponível para a chave da conta (a mesma
+  chave do `.env` roda o pipeline e o Rivet sem ajuste). Código provider-flexível (OpenAI também).
 - **Perfil conservador:** alocação-alvo 10/30/60 (Ações/Fundos/RF), guardrails mais
   apertados, regra de redução de fundos voláteis. Documentado em `config.POLICY`.
 - **Fundos sem "não fornecido":** estimativa por estratégia (CDI/Ibovespa), nunca citando
