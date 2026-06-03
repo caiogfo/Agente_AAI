@@ -10,7 +10,7 @@ data:
         description: >-
           Grounded monthly-letter workflow. A deterministic Python engine writes
           build/facts.json (audited numbers, benchmarks, recommendations, macro).
-          This graph NARRATES those facts in Portuguese with Anthropic Claude and
+          This graph NARRATES those facts in Portuguese with OpenAI gpt-4o-mini and
           never invents a number. Fixes the v1 issues: hardcoded Windows paths,
           hallucinated macro, wrong client name, no profitability, no recommendations.
         id: main_challenge_v2
@@ -75,7 +75,7 @@ data:
           visualData: 720/60/300/5//
         '[cPerf]:chat "Chat Performance"':
           data:
-            model: claude-sonnet-4-6
+            model: gpt-4o-mini
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -113,7 +113,7 @@ data:
           visualData: 720/380/300/7//
         '[cMacro]:chat "Chat Macro"':
           data:
-            model: claude-sonnet-4-6
+            model: gpt-4o-mini
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -147,7 +147,7 @@ data:
           visualData: 720/700/300/9//
         '[cRecs]:chat "Chat Recommendations"':
           data:
-            model: claude-sonnet-4-6
+            model: gpt-4o-mini
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -197,7 +197,7 @@ data:
           visualData: 1360/340/320/11//
         '[cLetter]:chat "Chat Letter"':
           data:
-            model: claude-sonnet-4-6
+            model: gpt-4o-mini
             temperature: 0.3
             top_p: 1
             useTopP: false
@@ -211,7 +211,7 @@ data:
     description: >-
       Enter / XP case — grounded monthly advisor letter. Run the Python engine
       first (python -m engine.facts) to produce build/facts.json, then run this
-      graph. Configure the Anthropic API key in Rivet (Settings > Anthropic).
+      graph. Configure the OpenAI API key in Rivet (Settings > OpenAI).
     id: enter_challenge_v2
     title: Enter Challenge (v2 — grounded)
   plugins: []

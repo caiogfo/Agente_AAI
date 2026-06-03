@@ -20,7 +20,7 @@ def test_rivet_parses_and_has_no_hardcoded_windows_paths():
     raw = open(config.ROOT / "enter_challenge.rivet-project").read()
     assert "C:\\Users" not in raw and "blope" not in raw       # v1 bug fixed
     assert "build/facts.json" in raw                            # grounded on facts
-    assert "claude" in raw.lower()                              # Anthropic, not gpt
+    assert "gpt-4o-mini" in raw                                 # OpenAI model wired
 
 
 def test_rivet_connections_reference_existing_nodes():
