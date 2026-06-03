@@ -1,0 +1,35 @@
+{
+  "client": {
+    "full_name": "Albert da Silva",
+    "first_name": "Albert",
+    "account": "792854",
+    "statement_datetime": "2025-05-07T19:24:00",
+    "risk_profile": "Moderado"
+  },
+  "advisor": {
+    "code": "A7699",
+    "name": "Antonio Bicudo"
+  },
+  "totals": {
+    "patrimonio_total": 386858.82,
+    "total_investido": 312186.20,
+    "saldo_disponivel": 74672.62,
+    "_note": "Alocacoes (%) abaixo sao sobre total_investido (312186.20). 312186.20 + 74672.62 = 386858.82."
+  },
+  "positions": [
+    {"asset_class": "Acoes",        "name": "LREN3", "ticker": "LREN3", "position_brl": 27812.04, "alloc_pct": 8.91,  "since_inception_return_pct": -41.70, "avg_price": 29.05, "last_price": 16.94, "qty": 1642, "buy_date": "2021-04-22"},
+    {"asset_class": "Acoes",        "name": "MRFG3", "ticker": "MRFG3", "position_brl": 15432.89, "alloc_pct": 4.94,  "since_inception_return_pct": 43.50,  "avg_price": 7.15,  "last_price": 10.26, "qty": 1504, "buy_date": "2021-04-22"},
+    {"asset_class": "Acoes",        "name": "ARZZ3", "ticker": "ARZZ3", "position_brl": 10923.72, "alloc_pct": 3.50,  "since_inception_return_pct": -31.05, "avg_price": 82.06, "last_price": 56.58, "qty": 193,  "buy_date": "2022-11-02"},
+    {"asset_class": "Acoes",        "name": "HAPV3", "ticker": "HAPV3", "position_brl": 6143.14,  "alloc_pct": 1.97,  "since_inception_return_pct": -74.58, "avg_price": 15.62, "last_price": 3.97,  "qty": 1547, "buy_date": "2022-11-02"},
+
+    {"asset_class": "Fundos",       "name": "Riza Lotus Plus Advisory FIC FIRF REF DI CP", "fund_category": "Renda Fixa / DI",  "position_brl": 96178.73, "alloc_pct": 30.81, "since_inception_return_pct": 15.51,  "applied_brl": 83267.36, "net_brl": 95254.02, "quote_date": "2024-04-04"},
+    {"asset_class": "Fundos",       "name": "Brave I FIC FIM CP",                          "fund_category": "Multimercado",     "position_brl": 72567.43, "alloc_pct": 23.24, "since_inception_return_pct": 19.08,  "applied_brl": 60940.01, "net_brl": 71811.89, "quote_date": "2024-04-04"},
+    {"asset_class": "Fundos",       "name": "Trend Investback FIC FIRF Simples",           "fund_category": "Renda Fixa",       "position_brl": 305.44,   "alloc_pct": 0.10,  "since_inception_return_pct": 16.01,  "applied_brl": 263.29,   "net_brl": 302.71,   "quote_date": "2024-04-05"},
+    {"asset_class": "Fundos",       "name": "Truxt Long Bias Advisory FIC FIM",            "fund_category": "Long Bias",        "position_brl": 12522.05, "alloc_pct": 4.01,  "since_inception_return_pct": -12.13, "applied_brl": 14250.00, "net_brl": 12522.05, "quote_date": "2024-04-04"},
+    {"asset_class": "Fundos",       "name": "STK Long Biased FIC FIA",                     "fund_category": "Acoes / Long Biased","position_brl": 9745.97, "alloc_pct": 3.12,  "since_inception_return_pct": -14.51, "applied_brl": 11400.00, "net_brl": 9745.97,  "quote_date": "2024-04-04"},
+    {"asset_class": "Fundos",       "name": "Constellation Institucional Advisory FIC FIA", "fund_category": "Acoes",           "position_brl": 8475.02,  "alloc_pct": 2.71,  "since_inception_return_pct": -25.66, "applied_brl": 11400.00, "net_brl": 8475.02,  "quote_date": "2024-04-04"},
+    {"asset_class": "Fundos",       "name": "Ibiuna Hedge ST Advisory FIC FIM",            "fund_category": "Multimercado",     "position_brl": 11601.02, "alloc_pct": 3.72,  "since_inception_return_pct": 33.74,  "applied_brl": 8674.51,  "net_brl": 11542.54, "quote_date": "2024-04-04"},
+
+    {"asset_class": "Renda Fixa",   "name": "CDB Banco C6 Consignado S.A. - SET/2024", "issuer": "Banco C6", "index": "IPCA", "spread_pct": 5.45, "position_brl": 40478.75, "alloc_pct": 12.97, "applied_brl": 30000.00, "apply_date": "2021-09-06", "maturity_date": "2024-09-05", "credit_rating": "BB+ (assumido p/ perfil moderado)"}
+  ]
+}
