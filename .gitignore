@@ -4,6 +4,7 @@ __pycache__/
 build/
 .DS_Store
 .env
+.claude/
 *.egg-info/
 .pytest_cache/
 node_modules/
