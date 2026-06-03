@@ -75,7 +75,7 @@ data:
           visualData: 720/60/300/5//
         '[cPerf]:chatAnthropic "Chat Performance"':
           data:
-            model: claude-sonnet-4-20250514
+            model: claude-sonnet-4-6
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -113,7 +113,7 @@ data:
           visualData: 720/380/300/7//
         '[cMacro]:chatAnthropic "Chat Macro"':
           data:
-            model: claude-sonnet-4-20250514
+            model: claude-sonnet-4-6
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -147,7 +147,7 @@ data:
           visualData: 720/700/300/9//
         '[cRecs]:chatAnthropic "Chat Recommendations"':
           data:
-            model: claude-sonnet-4-20250514
+            model: claude-sonnet-4-6
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -197,7 +197,7 @@ data:
           visualData: 1360/340/320/11//
         '[cLetter]:chatAnthropic "Chat Letter"':
           data:
-            model: claude-sonnet-4-20250514
+            model: claude-sonnet-4-6
             temperature: 0.3
             top_p: 1
             useTopP: false

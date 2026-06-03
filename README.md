@@ -28,7 +28,7 @@ python -m engine.run
 
 # narração com LLM (Anthropic Claude): defina a chave e rode
 export ANTHROPIC_API_KEY=sk-ant-...           # ou crie um arquivo .env (gitignored)
-export ANTHROPIC_MODEL=claude-sonnet-4-20250514   # opcional
+export ANTHROPIC_MODEL=claude-sonnet-4-6   # opcional
 python -m engine.run
 # (OpenAI gpt-4o-mini também é suportado via OPENAI_API_KEY)
 
