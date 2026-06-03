@@ -51,6 +51,12 @@ class ProfitabilityResult:
     real_return_pct: float = 0.0              # total - IPCA
     excess_cdi_pp: float = 0.0                # total - CDI
     covered_alloc_pct: float = 0.0            # share priced w/ measured data
+    # accumulated (since the contributions were made): cost basis vs current value
+    accumulated_invested_brl: float = 0.0
+    accumulated_current_brl: float = 0.0
+    accumulated_return_pct: float = 0.0
+    accumulated_gain_brl: float = 0.0
+    accumulated_by_class: dict = field(default_factory=dict)
 
 
 def _fixed_income_monthly(pos: Position, ipca_month_pct: float) -> float:
@@ -60,10 +66,24 @@ def _fixed_income_monthly(pos: Position, ipca_month_pct: float) -> float:
     return ((1.0 + ipca_month_pct / 100.0) * (1.0 + monthly_spread) - 1.0) * 100.0
 
 
-def compute(model: ClientModel, cdi_month_pct: float, ipca_month_pct: float) -> ProfitabilityResult:
+def _cost_basis(p) -> float:
+    """Cost of the position when it was bought (for accumulated return)."""
+    if p.asset_class == "Acoes":
+        avg = p.raw.get("avg_price")
+        qty = p.raw.get("qty")
+        if avg and qty:
+            return float(avg) * float(qty)
+    applied = p.raw.get("applied_brl")
+    return float(applied) if applied else p.position_brl
+
+
+def compute(model: ClientModel, cdi_month_pct: float, ipca_month_pct: float,
+            ibov_month_pct: float | None = None) -> ProfitabilityResult:
     invested = model.invested
     legs: list[Leg] = []
     measured_alloc = 0.0
+    acc_cost = acc_cur = 0.0
+    acc_by_class: dict[str, dict] = {}
 
     for p in model.positions:
         w = p.position_brl / invested            # weight of total invested
@@ -80,10 +100,22 @@ def compute(model: ClientModel, cdi_month_pct: float, ipca_month_pct: float) -> 
             est = False
             measured_alloc += p.alloc_pct
             basis = f"IPCA {ipca_month_pct:.2f}% + {p.spread_pct:.2f}%a.a. (pro-rata)"
-        else:                                     # Fundos -> proxy
-            r = cdi_month_pct
+        else:                                     # Fundos -> estimate by strategy
+            bench = config.FUND_BENCHMARK_BY_CATEGORY.get(p.fund_category or "", "cdi")
+            if bench == "ibov" and ibov_month_pct is not None:
+                r, ref = ibov_month_pct, "Ibovespa"
+            else:
+                r, ref = cdi_month_pct, "CDI"
             est = True
-            basis = "estimativa: proxy CDI (cota mensal nao fornecida nos dados)"
+            basis = f"estimado pela referencia da estrategia ({ref})"
+
+        # accumulated (cost basis vs current market value)
+        cost = _cost_basis(p)
+        acc_cost += cost
+        acc_cur += p.position_brl
+        cls = acc_by_class.setdefault(p.asset_class, {"cost": 0.0, "cur": 0.0})
+        cls["cost"] += cost
+        cls["cur"] += p.position_brl
 
         legs.append(Leg(
             name=p.name, asset_class=p.asset_class, alloc_pct=p.alloc_pct,
@@ -106,6 +138,15 @@ def compute(model: ClientModel, cdi_month_pct: float, ipca_month_pct: float) -> 
     total_return = sum(l.contribution_pp for l in legs)
     total_is_est = any(l.is_estimate for l in legs)
 
+    acc_return = (acc_cur / acc_cost - 1.0) * 100.0 if acc_cost else 0.0
+    acc_by_class_out = {
+        cls: {
+            "cost_brl": v["cost"], "current_brl": v["cur"],
+            "return_pct": (v["cur"] / v["cost"] - 1.0) * 100.0 if v["cost"] else 0.0,
+        }
+        for cls, v in acc_by_class.items()
+    }
+
     return ProfitabilityResult(
         reference_month_label=config.REFERENCE_MONTH_LABEL_PT,
         legs=legs,
@@ -120,6 +161,11 @@ def compute(model: ClientModel, cdi_month_pct: float, ipca_month_pct: float) -> 
         real_return_pct=total_return - ipca_month_pct,
         excess_cdi_pp=total_return - cdi_month_pct,
         covered_alloc_pct=measured_alloc,
+        accumulated_invested_brl=acc_cost,
+        accumulated_current_brl=acc_cur,
+        accumulated_return_pct=acc_return,
+        accumulated_gain_brl=acc_cur - acc_cost,
+        accumulated_by_class=acc_by_class_out,
     )
 
 

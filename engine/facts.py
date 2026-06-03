@@ -23,7 +23,8 @@ def _round(x, n=2):
 def build_facts(model: ClientModel | None = None) -> dict:
     model = model or load_client()
     bench = get_benchmarks()
-    prof: ProfitabilityResult = compute(model, bench["cdi_month_pct"], bench["ipca_month_pct"])
+    prof: ProfitabilityResult = compute(
+        model, bench["cdi_month_pct"], bench["ipca_month_pct"], bench["ibov_month_pct"])
     recs: RecommendationSet = analyze(model, prof)
 
     # allocation by class (% and BRL)
@@ -84,6 +85,18 @@ def build_facts(model: ClientModel | None = None) -> dict:
             "highlight_best": {"ticker": best.name, "monthly_return_pct": _round(best.monthly_return_pct)},
             "highlight_worst": {"ticker": worst.name, "monthly_return_pct": _round(worst.monthly_return_pct)},
         },
+        "accumulated": {
+            "invested_cost_brl": _round(prof.accumulated_invested_brl, 2),
+            "current_value_brl": _round(prof.accumulated_current_brl, 2),
+            "return_pct": _round(prof.accumulated_return_pct),
+            "gain_brl": _round(prof.accumulated_gain_brl, 2),
+            "by_class": {
+                cls: {"return_pct": _round(v["return_pct"]),
+                      "cost_brl": _round(v["cost_brl"], 2),
+                      "current_brl": _round(v["current_brl"], 2)}
+                for cls, v in prof.accumulated_by_class.items()
+            },
+        },
         "benchmarks": {
             "cdi_month_pct": _round(bench["cdi_month_pct"]),
             "ipca_month_pct": _round(bench["ipca_month_pct"]),
@@ -105,10 +118,14 @@ def build_facts(model: ClientModel | None = None) -> dict:
         "methodology_notes": [
             "Acoes: retorno do mes = preco atual / preco do mes anterior (CSV fornecido).",
             "Renda Fixa: IPCA real do mes (BCB) capitalizado com o spread contratual (pro-rata).",
-            "Fundos: cota mensal nao consta nos dados fornecidos; retorno do mes e ESTIMATIVA "
-            "(proxy CDI) e esta sinalizado. Retornos 'desde a compra' sao exibidos a parte.",
+            "Fundos: retorno do mes estimado pela referencia de mercado de cada estrategia "
+            "(CDI para pos-fixados/multimercado; Ibovespa para fundos de acoes/long-biased). "
+            "Retornos acumulados 'desde a compra' sao exibidos a parte.",
+            "Acumulado: valor atual vs custo dos aportes (preco medio x quantidade nas acoes; "
+            "valor aplicado nos fundos e na renda fixa).",
             "Benchmarks: CDI e IPCA do BCB (SGS); Ibovespa e S&P 500 do Yahoo Finance (mes-calendario).",
-            "Macro: numeros transcritos do relatorio XP de 06/02/2025 (nao estimados pelo modelo).",
+            "Macro: numeros transcritos do relatorio XP de 06/02/2025; ex.: cambio R$ 6,20/USD "
+            "no fim de 2025 e projecao da XP, nao uma estimativa do modelo.",
             f"Janela de comparacao: os precos das acoes refletem o extrato de "
             f"{config.SNAPSHOT_DATE.strftime('%d/%m/%Y')}, enquanto os benchmarks usam o "
             f"fechamento do mes de referencia; por isso as janelas podem diferir ligeiramente.",
@@ -120,9 +137,10 @@ def build_facts(model: ClientModel | None = None) -> dict:
             f"comparacao podem, portanto, diferir ligeiramente."
         ),
         "disclaimer": (
-            "Material de carater informativo, sem oferta de compra/venda. Rentabilidade passada "
-            "nao garante resultados futuros. Numeros de fundos refletem dados fornecidos; "
-            "estimativas estao sinalizadas. Identidade visual em estilo XP (emulacao)."
+            "Material de carater informativo e nao constitui oferta ou recomendacao "
+            "individualizada de compra ou venda. Rentabilidade passada nao garante resultados "
+            "futuros. Estimativas estao sinalizadas no relatorio. Em caso de duvidas, fale com "
+            "o seu assessor."
         ),
     }
     return facts

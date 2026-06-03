@@ -65,8 +65,9 @@ Validado por execução real: o grafo carrega, resolve os nós `chatAnthropic`, 
 `facts.json` e chama a API — bastando uma `ANTHROPIC_API_KEY` válida no `.env`.
 
 Correções do v1 embutidas no grafo: sem caminhos `C:\Users\...`; macro restrito à fonte;
-cliente parametrizado (Albert, não "João"); nós **Anthropic Claude** com prompts **grounded**
-no `facts.json` (em vez de texto cru a temp 0,5).
+cliente parametrizado (Albert, não "João"); nós **Anthropic Claude (Opus `claude-opus-4-6`)**
+com prompts **grounded** no `facts.json` (em vez de texto cru a temp 0,5). O logo do header usa
+`Input/XP_Investimentos_logo.png`.
 
 ## Estrutura
 

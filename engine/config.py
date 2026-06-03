@@ -59,19 +59,38 @@ MACRO_FACTS = {
 }
 
 # ----------------------------------------------------------------------------
-# Risk-profile policy (moderate) — drives the rule-based recommendation engine.
-# Derived from "XP - Albert's risk profile.txt".
+# Risk-profile policy — drives the rule-based recommendation engine.
+# Albert is treated with a CONSERVATIVE tilt (per advisor guidance): preserve
+# capital first, lower exposure to volatility (equities and risky funds), and
+# privilege fixed income and safe (post-fixed) funds in a high-Selic regime.
+# Target allocation below is the documented objective for this profile.
 # ----------------------------------------------------------------------------
-MODERATE_POLICY = {
-    "profile": "Moderado",
+POLICY = {
+    "profile": "Conservador",
     "min_credit_rating": "BB+",
     "equity_preference": "empresas consolidadas pagadoras de dividendos",
-    # Indicative target allocation for a moderate Brazilian investor.
-    "target_allocation_pct": {"Acoes": 20.0, "Fundos": 50.0, "Renda Fixa": 30.0},
-    # Guardrails
-    "max_single_stock_pct": 7.0,       # of total invested
-    "deep_loss_threshold_pct": -40.0,  # since-inception loss that warrants review
-    "cash_drag_threshold_pct": 15.0,   # idle cash as % of patrimony worth deploying
+    # Documented objective allocation for a conservative Brazilian investor:
+    # capital-preservation tilt, fixed income as the core.
+    "target_allocation_pct": {"Acoes": 10.0, "Fundos": 30.0, "Renda Fixa": 60.0},
+    # Guardrails (tighter than a moderate profile)
+    "max_single_stock_pct": 5.0,       # of total invested
+    "deep_loss_threshold_pct": -30.0,  # since-inception loss that warrants review
+    "cash_drag_threshold_pct": 10.0,   # idle cash worth deploying
+    "max_risky_funds_pct": 15.0,       # cap on volatile (equity/long-bias/multimkt) funds
+}
+# Backwards-compatible alias
+MODERATE_POLICY = POLICY
+
+# Which fund strategies are "safe" (post-fixed / fixed income) vs volatile, and
+# the market benchmark used to estimate each strategy's monthly return.
+SAFE_FUND_CATEGORIES = {"Renda Fixa / DI", "Renda Fixa"}
+FUND_BENCHMARK_BY_CATEGORY = {
+    "Renda Fixa / DI": "cdi",
+    "Renda Fixa": "cdi",
+    "Multimercado": "cdi",          # hedge funds ~ CDI carry (conservative anchor)
+    "Long Bias": "ibov",
+    "Acoes / Long Biased": "ibov",
+    "Acoes": "ibov",
 }
 
 # Benchmarks (BCB SGS series codes). CDI/IPCA accumulated in the month (% a.m.).

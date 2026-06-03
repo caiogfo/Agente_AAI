@@ -44,7 +44,9 @@ carta final em português, em formato de carta.
 ### Dados-chave do Albert (transcritos do extrato)
 - Patrimônio **R$386.858,82** = Investido **R$312.186,20** + Caixa **R$74.672,62**.
 - Alocações são % do **investido**: **Ações 19,32%**, **Fundos 67,71%**, **Renda Fixa 12,97%**.
-- Perfil **Moderado**; assessor **Antonio Bicudo (A7699)**; snapshot **07/05/2025**.
+- Perfil tratado como **Conservador** (orientação do cliente/assessor; o documento de
+  perfil original marca "Moderado", mas a diretriz é menor exposição a volatilidade).
+- Assessor **Antonio Bicudo (A7699)**; snapshot **07/05/2025**.
 
 ---
 
@@ -95,12 +97,27 @@ Input (CSV, JSON, txt)  ─►  engine/ (Python determinístico, pytest)  ─►
 |---|---|---|
 | **Ações** | **+7,74%** (apurado) | preço atual ÷ preço mês anterior (CSV) |
 | **Renda Fixa** | **+0,88%** (apurado) | IPCA real 0,43% + 5,45%a.a. pro-rata |
-| **Fundos** | +1,06% (**estimativa**, proxy CDI) | cota mensal não fornecida nos dados |
-| **Carteira (total)** | **≈ +2,32%** (estimativa) | soma ponderada das contribuições |
+| **Fundos** | estimado por estratégia (CDI 1,06% / Ibovespa 3,69%) | referência de mercado de cada estratégia |
+| **Carteira (total)** | **≈ +2,58%** (estimativa) | soma ponderada das contribuições |
 
-Benchmarks reais (BCB, abr/2025): **CDI 1,06%**, **IPCA 0,43%** → retorno real ≈ **+1,89%**,
-**+1,26 p.p. vs CDI**. Cobertura apurada (sem estimativa): **32,29%** do investido.
-Destaques do mês: **HAPV3 +76,4%** (recuperação) e **MRFG3 −16,4%**.
+Benchmarks reais (BCB + Yahoo, abr/2025): **CDI 1,06%**, **IPCA 0,43%**, **Ibovespa +3,69%**,
+**S&P 500 −0,76%**. Destaques do mês: **HAPV3 +76,4%** e **MRFG3 −16,4%**.
+
+**Rentabilidade acumulada (desde os aportes):** custo R$318.650,59 → atual R$312.186,20 =
+**−2,03%**. Por classe: **Ações −38,7%** (puxam para baixo), **Fundos +11,2%**, **Renda
+Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
+
+> **Dados dos fundos (decisão de honestidade).** A cota mensal exata de cada fundo "Advisory"
+> não é identificável com segurança na base da CVM (cada estratégia tem dezenas de classes;
+> ex.: Truxt Long Bias retorna 10 CNPJs, Riza Lotus e Trend Investback retornam 0). Cravar um
+> CNPJ errado geraria número falso atribuído a um fundo específico. Por isso estimamos cada
+> fundo pela **referência de mercado da sua estratégia** (CDI/Ibovespa), com dado real do mês,
+> sem nunca afirmar que algo "não foi fornecido".
+
+> **Disclaimer de janela (também impresso na carta).** Os preços das ações refletem o
+> **extrato de 07/05/2025**; os indicadores de mercado usam o **fechamento do mês de
+> referência**. As janelas podem diferir ligeiramente, com esta ressalva explícita na
+> documentação e no relatório do cliente.
 
 > **Disclaimer de janela (também impresso na carta).** Os preços das ações refletem o
 > **extrato de 07/05/2025**; os indicadores de mercado (CDI, IPCA, Ibovespa, S&P 500) usam o
@@ -121,8 +138,20 @@ Destaques do mês: **HAPV3 +76,4%** (recuperação) e **MRFG3 −16,4%**.
 - [x] **6.** Grafo Rivet corrigido e completo (Anthropic, facts JSON, sem caminhos hardcoded).
 - [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(31 testes ok)**
 
-> **Pendente apenas:** validar a narração com a **chave Anthropic real** (o usuário criará a
-> key em console.anthropic.com). Sem a key, o pipeline roda com o fallback determinístico.
+## 6.1. Ajustes solicitados (rodadas seguintes)
+- **Provider:** validado com chave real. Narração Python via Claude; **grafo Rivet usa Opus
+  (`claude-opus-4-8`)** por pedido do usuário. Código provider-flexível (OpenAI também).
+- **Perfil conservador:** alocação-alvo 10/30/60 (Ações/Fundos/RF), guardrails mais
+  apertados, regra de redução de fundos voláteis. Documentado em `config.POLICY`.
+- **Fundos sem "não fornecido":** estimativa por estratégia (CDI/Ibovespa), nunca citando
+  ausência de dado (ver decisão de honestidade na §5).
+- **Rentabilidade acumulada:** custo dos aportes vs valor atual, por classe e total.
+- **Identidade visual:** **logo PNG oficial da XP** (`Input/XP_Investimentos_logo.png`) no
+  cabeçalho; rodapé sem menção a "emulação"; gráficos mais limpos e simétricos.
+- **Tom humano (anti-IA):** sem travessões/hífens-lista, sem clichês de IA, frases de
+  tamanho variado, análise de sentimento conforme o resultado, conexão ao objetivo de longo
+  prazo. Pós-processamento remove "traços de IA". Aplicado à carta, ao `REPORT.md` e a esta doc.
+- **Câmbio 6,20:** atribuído explicitamente à **projeção da XP** (relatório 06/02/2025).
 
 ## 7. Homologação
 - `pytest -q` (todos os cálculos batem com valores conferidos à mão).

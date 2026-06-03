@@ -62,11 +62,14 @@ data:
               in FACTS. NEVER invent or alter a figure.
 
               Rules:
-              - The equities sleeve return is MEASURED; the funds and total return are
-                an ESTIMATE (CDI proxy, monthly fund NAV not provided) — say so plainly.
+              - The equities sleeve return is MEASURED. Fund returns are ESTIMATED by each
+                strategy benchmark (CDI for post-fixed/multimarket, Ibovespa for equity
+                funds). Present this naturally; never say data was missing or not provided.
+              - Also report the ACCUMULATED return since contributions (FACTS.accumulated):
+                total and by class.
               - Mention the best/worst stock of the month and the comparison vs CDI/IPCA.
-              - 4-6 sentences, professional, plain language. Output language: English
-                (this is an intermediate summary; the final letter is Portuguese).
+              - 4-6 sentences, professional, plain language. Do not use em dashes. Output
+                language: English (intermediate summary; the final letter is Portuguese).
 
               ### FACTS
               {{facts}}
@@ -75,7 +78,7 @@ data:
           visualData: 720/60/300/5//
         '[cPerf]:chatAnthropic "Chat Performance"':
           data:
-            model: claude-sonnet-4-6
+            model: claude-opus-4-6
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -113,7 +116,7 @@ data:
           visualData: 720/380/300/7//
         '[cMacro]:chatAnthropic "Chat Macro"':
           data:
-            model: claude-sonnet-4-6
+            model: claude-opus-4-6
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -147,7 +150,7 @@ data:
           visualData: 720/700/300/9//
         '[cRecs]:chatAnthropic "Chat Recommendations"':
           data:
-            model: claude-sonnet-4-6
+            model: claude-opus-4-6
             temperature: 0.2
             top_p: 1
             useTopP: false
@@ -171,12 +174,21 @@ data:
 
               Hard rules:
               - Address the client by FACTS.client.first_name (e.g., "Prezado Albert,").
-                NEVER use a placeholder name like "João".
-              - Sign off with FACTS.advisor.name and code.
-              - Use ONLY numbers already present in the summaries / FACTS. Do not invent.
-              - Keep the funds/total return framed as an estimate where FACTS says so.
-              - Up to two pages (~500 words), paragraphs (no bullets), warm but precise,
-                in the voice of an elite XP advisor: clear, proactive, trustworthy.
+                NEVER use a placeholder name like "João". Sign off with FACTS.advisor.name.
+              - Albert has a CONSERVATIVE profile: prioritize capital preservation and tie
+                every point back to his long-term goal of steady, low-volatility growth.
+              - Read the results and calibrate sensitivity: the accumulated return is
+                negative, so be empathetic and reassuring, never with spin.
+              - Report the ACCUMULATED return (FACTS.accumulated) alongside the month.
+              - Funds: returns estimated by each strategy benchmark; never say data was
+                missing. Attribute macro figures to XP (the BRL 6.20 FX is XP's projection).
+              - Use ONLY numbers present in the summaries / FACTS. Do not invent.
+              - Up to two pages (~500 words), paragraphs only (no bullets, no headings).
+                Write like a senior human copywriter: vary sentence length (short and
+                punchy mixed with longer, explanatory), no em/en dashes, no hyphens to
+                string loose phrases, and no AI cliches ("Em suma", "Portanto", "E
+                importante ressaltar", "Como mencionado anteriormente"). Leave no trace
+                of being AI-written.
               - Add one short footnote sentence: equity prices reflect the statement of
                 FACTS.meta.snapshot_date while market benchmarks use the reference-month
                 close, so windows may differ slightly.
@@ -197,7 +209,7 @@ data:
           visualData: 1360/340/320/11//
         '[cLetter]:chatAnthropic "Chat Letter"':
           data:
-            model: claude-sonnet-4-6
+            model: claude-opus-4-6
             temperature: 0.3
             top_p: 1
             useTopP: false
@@ -216,9 +228,9 @@ data:
           visualData: 2090/340/240/13//
   metadata:
     description: >-
-      Enter / XP case — grounded monthly advisor letter. Run the Python engine
+      Enter / XP case: grounded monthly advisor letter. Run the Python engine
       first (python -m engine.facts) to produce build/facts.json, then run this
       graph. Configure the Anthropic API key in Rivet (Settings > Anthropic).
     id: enter_challenge_v2
-    title: Enter Challenge (v2 — grounded)
+    title: Enter Challenge (v2 - grounded)
   plugins: []

@@ -80,22 +80,23 @@ def _header_footer(canvas, doc):
     # top black band
     canvas.setFillColor(_blk)
     canvas.rect(0, PAGE_H - HEADER_H, PAGE_W, HEADER_H, fill=1, stroke=0)
-    # yellow XP mark
-    canvas.setFillColor(_y)
-    canvas.rect(MARGIN, PAGE_H - HEADER_H + 6 * mm, 16 * mm, 11 * mm, fill=1, stroke=0)
-    canvas.setFillColor(_blk)
-    canvas.setFont("Helvetica-Bold", 16)
-    canvas.drawCentredString(MARGIN + 8 * mm, PAGE_H - HEADER_H + 9 * mm, "XP")
-    # title
+    # XP logo (official asset provided by the user, else a generated fallback mark)
+    logo = doc._logo_path
+    if logo and logo.exists():
+        lh = 16 * mm
+        lw = lh * doc._logo_ratio
+        canvas.drawImage(str(logo), MARGIN, PAGE_H - HEADER_H + (HEADER_H - lh) / 2,
+                         width=lw, height=lh, mask="auto", preserveAspectRatio=True)
+    # title (right-aligned)
     canvas.setFillColor(colors.white)
     canvas.setFont("Helvetica-Bold", 13)
-    canvas.drawString(MARGIN + 20 * mm, PAGE_H - HEADER_H + 13 * mm,
-                      "Relatório Mensal de Investimentos")
+    canvas.drawRightString(PAGE_W - MARGIN, PAGE_H - HEADER_H + 13 * mm,
+                           "Relatório Mensal de Investimentos")
     canvas.setFillColor(_y)
     canvas.setFont("Helvetica", 9)
-    canvas.drawString(MARGIN + 20 * mm, PAGE_H - HEADER_H + 8 * mm,
-                      f"Referência: {facts['meta']['reference_month_label']}  ·  "
-                      f"Perfil {facts['client']['risk_profile']}")
+    canvas.drawRightString(PAGE_W - MARGIN, PAGE_H - HEADER_H + 8 * mm,
+                           f"Referência: {facts['meta']['reference_month_label']}  ·  "
+                           f"Perfil {facts['client']['risk_profile']}")
     # footer
     canvas.setFillColor(_graylt)
     canvas.rect(0, 0, PAGE_W, FOOTER_H, fill=1, stroke=0)
@@ -132,12 +133,13 @@ def _kpi_card(label, value, color=None, S=None):
 
 def _kpi_row(facts, S):
     p = facts["performance"]
+    acc = facts["accumulated"]
     cards = [
         _kpi_card("Patrimônio total", brl(facts["totals"]["patrimony_brl"]), B.XP_BLACK, S),
         _kpi_card(f"Retorno em {facts['meta']['reference_month_label']} (estimativa)",
                   pct(p["total_return_pct"]), B.POSITIVE if p["total_return_pct"] >= 0 else B.NEGATIVE, S),
-        _kpi_card("Acima do CDI no mês", pct(p["excess_cdi_pp"]) + " p.p.",
-                  B.POSITIVE if p["excess_cdi_pp"] >= 0 else B.NEGATIVE, S),
+        _kpi_card("Retorno acumulado (desde os aportes)", pct(acc["return_pct"]),
+                  B.POSITIVE if acc["return_pct"] >= 0 else B.NEGATIVE, S),
     ]
     row = Table([cards], colWidths=[(PAGE_W - 2 * MARGIN) / 3] * 3)
     row.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0),
@@ -146,11 +148,34 @@ def _kpi_row(facts, S):
     return row
 
 
+def _img_h(path, height_mm):
+    """Image flowable at a fixed height, width from the file's true aspect ratio."""
+    from PIL import Image as PILImage
+    with PILImage.open(path) as im:
+        ratio = im.size[0] / im.size[1]
+    return Image(path, width=height_mm * mm * ratio, height=height_mm * mm)
+
+
 def _two_charts(chart_paths, S):
-    donut = Image(chart_paths["allocation"], width=66 * mm, height=66 * mm)
-    bench = Image(chart_paths["benchmark"], width=104 * mm, height=66 * mm)
-    t = Table([[donut, bench]], colWidths=[70 * mm, (PAGE_W - 2 * MARGIN - 70 * mm)])
+    h = 52
+    donut = _img_h(chart_paths["allocation"], h)
+    bench = _img_h(chart_paths["benchmark"], h)
+    avail = PAGE_W - 2 * MARGIN
+    t = Table([[donut, bench]], colWidths=[avail * 0.42, avail * 0.58])
     t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                           ("ALIGN", (0, 0), (0, 0), "CENTER"),
+                           ("ALIGN", (1, 0), (1, 0), "CENTER"),
+                           ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                           ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                           ("TOPPADDING", (0, 0), (-1, -1), 2),
+                           ("BOTTOMPADDING", (0, 0), (-1, -1), 2)]))
+    return t
+
+
+def _accumulated_chart(chart_paths, S):
+    img = _img_h(chart_paths["accumulated"], 40)
+    t = Table([[img]], colWidths=[PAGE_W - 2 * MARGIN])
+    t.setStyle(TableStyle([("ALIGN", (0, 0), (0, 0), "CENTER"),
                            ("LEFTPADDING", (0, 0), (-1, -1), 0),
                            ("RIGHTPADDING", (0, 0), (-1, -1), 0)]))
     return t
@@ -217,6 +242,20 @@ def render_letter(facts: dict, narrative: dict, chart_paths: dict,
         author=facts["advisor"]["name"],
     )
     doc._facts = facts
+    # XP logo: use assets/xp_logo.png (official asset if present, else generate one)
+    logo_path = config.INPUT_DIR / "XP_Investimentos_logo.png"   # asset provided by user
+    if not logo_path.exists():
+        logo_path = config.ASSETS_DIR / "xp_logo.png"
+        if not logo_path.exists():
+            from . import make_logo
+            make_logo.generate(logo_path)
+    doc._logo_path = logo_path
+    try:
+        from PIL import Image
+        with Image.open(logo_path) as _im:
+            doc._logo_ratio = _im.size[0] / _im.size[1]
+    except Exception:
+        doc._logo_ratio = 1.0
     frame = Frame(MARGIN, FOOTER_H + 4 * mm, PAGE_W - 2 * MARGIN,
                   PAGE_H - HEADER_H - FOOTER_H - 10 * mm, id="main")
     doc.addPageTemplates([PageTemplate(id="all", frames=[frame],
@@ -248,7 +287,7 @@ def render_letter(facts: dict, narrative: dict, chart_paths: dict,
     story.append(Spacer(1, 6))
     story.append(Paragraph("Atenciosamente,", S["body"]))
     story.append(Paragraph(facts["advisor"]["name"], S["sign"]))
-    story.append(Paragraph(f'Assessor de Investimentos · {facts["advisor"]["code"]} · XP Investimentos',
+    story.append(Paragraph(f'Assessor de Investimentos · Código {facts["advisor"]["code"]}',
                            S["kpi_lbl"]))
 
     doc.build(story)
