@@ -12,12 +12,12 @@ yaml = pytest.importorskip("yaml")
 
 # ------------------------------------------------------------------- Rivet file
 def _graph():
-    doc = yaml.safe_load(open(config.ROOT / "enter_challenge.rivet-project"))
+    doc = yaml.safe_load(open(config.RIVET_PROJECT))
     return doc["data"]["graphs"]["main_challenge_v2"]
 
 
 def test_rivet_parses_and_has_no_hardcoded_windows_paths():
-    raw = open(config.ROOT / "enter_challenge.rivet-project").read()
+    raw = open(config.RIVET_PROJECT).read()
     assert "C:\\Users" not in raw and "blope" not in raw       # v1 bug fixed
     assert "build/facts.json" in raw                            # grounded on facts
     low = raw.lower()

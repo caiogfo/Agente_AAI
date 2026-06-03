@@ -2,6 +2,12 @@
 
 > Documento de planejamento e documentação completa do material do case.
 > Autor da solução: Caio Gomes (case técnico Enter). Cliente tema: XP Investimentos.
+>
+> **Organização do repositório (entrega final):** os insumos originais do case ficam em
+> `01_Insumos_do_case/` (citados abaixo pelo nome histórico "Input/..."); o código e os
+> dados em `02_Projeto/` (`engine/`, `data/`, `Output/`); os grafos em `03_Rivet/`; e este
+> planejamento em `04_Planejamento/`. Os caminhos relativos no texto abaixo descrevem a
+> lógica do pipeline — para rodar, ver `COMO_RODAR.md` na raiz.
 
 ---
 

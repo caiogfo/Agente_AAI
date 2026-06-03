@@ -15,12 +15,17 @@ from pathlib import Path
 # ----------------------------------------------------------------------------
 # Paths
 # ----------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent.parent
-INPUT_DIR = ROOT / "Input"
+ROOT = Path(__file__).resolve().parent.parent          # 02_Projeto/ (pacote do projeto)
+REPO_ROOT = ROOT.parent                                 # raiz do repositório (entregável)
+# Case inputs live in a sibling folder at the repo root (kept apart from the project)
+INPUT_DIR = REPO_ROOT / "01_Insumos_do_case"
 DATA_DIR = ROOT / "data"
 OUTPUT_DIR = ROOT / "Output"
 BUILD_DIR = ROOT / "build"          # generated charts / intermediate artifacts
 ASSETS_DIR = ROOT / "assets"
+# Rivet graphs (final + v1 backup) live in their own folder at the repo root
+RIVET_DIR = REPO_ROOT / "03_Rivet"
+RIVET_PROJECT = RIVET_DIR / "enter_challenge.rivet-project"
 
 PORTFOLIO_JSON = DATA_DIR / "albert_portfolio.json"
 PRICE_CSV = INPUT_DIR / "profitability_calc_wip.csv"
