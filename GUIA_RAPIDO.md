@@ -1,115 +1,114 @@
-# Guia rápido para rodar (passo a passo, do zero)
+# Guia de execução
 
-Para quem **nunca rodou um projeto** assim. Em ~15 minutos você gera a carta em PDF.
-Os comandos são para **macOS**; ao final há as diferenças para **Windows**.
+Passo a passo direto para rodar o projeto e gerar a carta em PDF. Cada comando vem
+comentado com o que ele faz. Tempo total: ~5 minutos.
 
-> Você vai precisar de: um computador, a **chave da Anthropic** (o responsável pelo
-> projeto te envia) e seguir os passos abaixo na ordem. Não precisa saber programar.
+> **Pré-requisitos:** Python 3.9+ e um terminal. A chave da Anthropic é **opcional**
+> para gerar a carta (há narração determinística de fallback), mas é **necessária para
+> rodar o grafo Rivet** — ela vem anexada no corpo do e-mail desta entrega.
 
 ---
 
-## Passo 1 — Receber o projeto
-
-O repositório é **privado**, então uma destas duas formas:
-
-- **(Mais fácil) Receber um arquivo `.zip`** com o projeto. Salve em algum lugar fácil
-  (ex.: a Mesa/Desktop) e **descompacte** (clique duplo). Vai virar uma pasta chamada
-  `Agente_AAI`.
-- **Ou** receber um convite de acesso no GitHub: abra o link do repositório, clique no
-  botão verde **`Code` → `Download ZIP`**, e descompacte como acima.
-
-Ao final deste passo você tem uma pasta `Agente_AAI` no computador.
-
-## Passo 2 — Instalar o Python (se ainda não tiver)
-
-1. Abra o programa **Terminal** (no Mac: aperte `Cmd + Espaço`, digite "Terminal", Enter).
-2. Digite o comando abaixo e aperte Enter para checar se já tem Python:
-
-   ```bash
-   python3 --version
-   ```
-
-   - Se aparecer algo como `Python 3.9` (ou maior), **pule para o Passo 3**.
-   - Se der erro/"command not found", baixe o instalador em
-     <https://www.python.org/downloads/> , instale normalmente (avançar/avançar) e
-     feche e reabra o Terminal.
-
-## Passo 3 — Entrar na pasta do projeto pelo Terminal
-
-No Terminal, digite `cd ` (com um espaço depois), **arraste a pasta `Agente_AAI`** para
-dentro da janela do Terminal (isso cola o caminho) e aperte Enter:
+## 1. Entrar na pasta do projeto
 
 ```bash
-cd /caminho/que/apareceu/Agente_AAI
+cd caminho/para/Agente_AAI      # raiz do projeto (onde estão README.md e Makefile)
 ```
 
-Para conferir que está no lugar certo, digite `ls` e Enter: você deve ver nomes como
-`engine`, `README.md`, `Makefile`.
-
-## Passo 4 — Preparar o ambiente (uma única vez)
-
-Copie e cole este comando, Enter, e **aguarde** terminar (baixa as dependências):
+## 2. Preparar o ambiente (uma única vez)
 
 ```bash
 make setup
 ```
 
-> Se aparecer "make: command not found", use este comando equivalente no lugar:
+O `make setup` faz três coisas: cria um ambiente virtual isolado em `.venv/`, instala as
+dependências de `requirements.txt` e gera o arquivo `.env` (a partir de `.env.example`)
+onde a chave será colada no próximo passo.
+
+> Sem `make`? Comando equivalente:
 > ```bash
-> python3 -m venv .venv && ./.venv/bin/pip install -r requirements.txt && cp .env.example .env
+> python3 -m venv .venv \
+>   && ./.venv/bin/pip install -r requirements.txt \
+>   && cp .env.example .env
 > ```
 
-## Passo 5 — Colar a chave da Anthropic
+## 3. Colar a chave da Anthropic
 
-O passo anterior criou um arquivo chamado **`.env`** dentro da pasta. Abra ele num editor
-de texto e cole a chave que você recebeu, assim:
+Abra o `.env` (criado no passo anterior) e cole a chave recebida no e-mail:
 
-```
+```bash
 ANTHROPIC_API_KEY=cole-a-chave-aqui
+ANTHROPIC_MODEL=claude-sonnet-4-6      # já vem assim; é o modelo validado p/ esta chave
 ```
 
-Salve o arquivo. (Para abrir pelo Terminal no Mac: `open -e .env`.)
+Salve. (No Mac dá para abrir pelo terminal com `open -e .env`.)
 
-> **Não tem a chave?** Tudo bem: o projeto roda mesmo assim, só que o texto da carta é
-> gerado por um modo automático (sem IA). Os números e o layout ficam idênticos.
+> **Sem a chave a carta ainda sai:** a narração cai no modo determinístico. Os números,
+> os gráficos e o layout ficam idênticos — só o texto deixa de ser escrito pelo Claude.
 
-## Passo 6 — Gerar a carta
+## 4. Gerar a carta
 
 ```bash
-make run
+make run        # gera a carta do cliente padrão (Albert) em Output/
 ```
 
-(sem `make`: `./.venv/bin/python -m engine.run`)
+A carta sai em `Output/albert_da_silva_relatorio_mensal.pdf` (2 páginas, identidade XP).
 
-Quando terminar, a carta em PDF estará na pasta **`Output/`**, com nome
-`albert_da_silva_relatorio_mensal.pdf`. Abra com dois cliques.
-
-Para gerar a carta de **todos os clientes** de uma vez (ex.: Albert e Beatriz):
+Para gerar **todos os clientes** de uma vez (prova de escala — Albert + Beatriz):
 
 ```bash
-make batch
+make batch      # varre data/*.json e gera uma carta por cliente
+```
+
+> Sem `make`: `./.venv/bin/python -m engine.run` (single) ou `... --all` (lote).
+
+## 5. (Opcional) Rodar o grafo Rivet
+
+O grafo é a **camada de narração**: lê o `facts.json` produzido pelo motor Python e
+escreve a carta com o Claude. Precisa da chave no `.env`.
+
+```bash
+./.venv/bin/python -m engine.run --emit-facts   # 1) gera build/facts.json (os fatos)
+cd rivet_runner && npm install && cd ..          # 2) instala o runner Node (uma vez)
+node --env-file=.env rivet_runner/run_graph.mjs  # 3) roda o grafo com o Claude
+```
+
+Ou abra `enter_challenge.rivet-project` no app do [Rivet](https://rivet.ironcladapp.com/),
+configure a Anthropic key em *Settings* e rode o grafo `main_challenge`.
+
+## 6. (Opcional) Conferir os testes
+
+```bash
+make test       # roda os 42 testes (aritmética conferida ao centavo, anti-regressão)
 ```
 
 ---
 
-## Deu algum erro? (soluções rápidas)
+## Saída
 
-- **`command not found: python3`** → o Python não está instalado ou o Terminal não foi
-  reaberto. Refaça o Passo 2 e abra um Terminal novo.
-- **`make: command not found`** → use os comandos alternativos indicados nos Passos 4 e 6.
-- **`No such file or directory`** → você não está na pasta do projeto. Refaça o Passo 3.
-- **Erro de chave / API** → confira se colou a chave certa no `.env` (Passo 5). Se quiser,
-  é só deixar sem chave que ele usa o modo automático.
+| Arquivo | O que é |
+|---|---|
+| `Output/albert_da_silva_relatorio_mensal.pdf` | Carta final do cliente real (Albert) |
+| `Output/beatriz_almeida_relatorio_mensal.pdf` | 2º cliente (prova de escala), gerado por `make batch` |
+| `build/facts.json` | Fatos calculados que alimentam a narração (gerado por `--emit-facts`) |
+
+## Problemas comuns
+
+- **`command not found: python3`** → instale o Python 3.9+ e reabra o terminal.
+- **`make: command not found`** → use os comandos equivalentes indicados em cada passo.
+- **`No such file or directory`** → você não está na raiz do projeto (refaça o passo 1).
+- **Erro de API / chave** → confira a chave no `.env`. Sem chave, o projeto roda no modo
+  determinístico mesmo assim.
 
 ## Windows (diferenças)
 
-- Abra o **PowerShell** (menu Iniciar → "PowerShell").
-- No Passo 2, ao instalar o Python, **marque a caixa "Add Python to PATH"**.
-- Não há `make`. Use:
-  ```powershell
-  python -m venv .venv
-  .\.venv\Scripts\pip install -r requirements.txt
-  copy .env.example .env
-  .\.venv\Scripts\python -m engine.run
-  ```
-- A carta sai na pasta `Output\` do mesmo jeito.
+Use o **PowerShell** e, ao instalar o Python, marque **"Add Python to PATH"**. Não há
+`make`; rode os comandos manuais:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\pip install -r requirements.txt
+copy .env.example .env
+# cole a chave no .env, então:
+.\.venv\Scripts\python -m engine.run
+```

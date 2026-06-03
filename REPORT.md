@@ -1,6 +1,6 @@
 # Relatório do Desafio — AI Financial Advisor (Enter / XP)
 
-*Candidato · case técnico Enter. Resumo de 2 páginas: o que estava errado na v1, como
+*Caio Gomes · case técnico Enter. Resumo de 2 páginas: o que estava errado na v1, como
 resolvi e o que faria com mais tempo.*
 
 ---

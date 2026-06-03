@@ -7,8 +7,8 @@ do perfil de risco e da macro da casa.
 **Princípio:** um motor Python **determinístico e testado** calcula tudo e produz um
 `facts.json`; o LLM (Claude) apenas **narra** os fatos e nunca inventa um número.
 
-> 🟢 **Nunca rodou um projeto assim?** Siga o **[GUIA_RAPIDO.md](GUIA_RAPIDO.md)** —
-> passo a passo do zero (instalar, baixar, colar a chave, gerar a carta).
+> 🟢 **Quer só rodar?** Siga o **[GUIA_RAPIDO.md](GUIA_RAPIDO.md)** — passo a passo
+> direto (ambiente, chave, gerar a carta, rodar o Rivet), com cada comando comentado.
 
 > 📄 Leia `PLANEJAMENTO.md` (documentação completa + diagnóstico do v1) e `REPORT.md`
 > (entregável: problemas, abordagem, próximos passos).
@@ -85,8 +85,9 @@ Validado por execução real: o grafo carrega, resolve os nós `chatAnthropic`, 
 `facts.json` e chama a API — bastando uma `ANTHROPIC_API_KEY` válida no `.env`.
 
 Correções do v1 embutidas no grafo: sem caminhos `C:\Users\...`; macro restrito à fonte;
-cliente parametrizado (Albert, não "João"); nós **Anthropic Claude (Opus `claude-opus-4-6`)**
-com prompts **grounded** no `facts.json` (em vez de texto cru a temp 0,5). O logo do header usa
+cliente parametrizado (Albert, não "João"); nós **Anthropic Claude (`claude-sonnet-4-6`, o
+modelo validado com a chave da conta)** com prompts **grounded** no `facts.json` (em vez de
+texto cru a temp 0,5). O logo do header usa
 `Input/XP_Investimentos_logo.png`.
 
 ## Estrutura
