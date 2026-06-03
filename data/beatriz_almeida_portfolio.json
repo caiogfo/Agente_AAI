@@ -1,0 +1,104 @@
+{
+  "client": {
+    "full_name": "Beatriz Almeida",
+    "first_name": "Beatriz",
+    "account": "813207",
+    "statement_datetime": "2025-05-07T18:10:00",
+    "risk_profile": "Moderado",
+    "gender": "F"
+  },
+  "advisor": {
+    "code": "B1234",
+    "name": "Carla Menezes"
+  },
+  "totals": {
+    "patrimonio_total": 500202.5,
+    "total_investido": 472202.5,
+    "saldo_disponivel": 28000.0,
+    "_note": "Cliente sintético de demonstração (multi-cliente/multi-assessor). Alocacoes (%) sobre total_investido."
+  },
+  "positions": [
+    {
+      "asset_class": "Acoes",
+      "name": "ABEV3",
+      "ticker": "ABEV3",
+      "position_brl": 85920.0,
+      "alloc_pct": 18.2,
+      "since_inception_return_pct": 10.2,
+      "avg_price": 13.0,
+      "last_price": 14.32,
+      "qty": 6000,
+      "buy_date": "2021-06-15"
+    },
+    {
+      "asset_class": "Acoes",
+      "name": "ITUB4",
+      "ticker": "ITUB4",
+      "position_brl": 50040.0,
+      "alloc_pct": 10.6,
+      "since_inception_return_pct": 26.4,
+      "avg_price": 22.0,
+      "last_price": 27.8,
+      "qty": 1800,
+      "buy_date": "2020-11-03"
+    },
+    {
+      "asset_class": "Acoes",
+      "name": "VALE3",
+      "ticker": "VALE3",
+      "position_brl": 41242.5,
+      "alloc_pct": 8.73,
+      "since_inception_return_pct": -9.4,
+      "avg_price": 70.0,
+      "last_price": 63.45,
+      "qty": 650,
+      "buy_date": "2022-01-20"
+    },
+    {
+      "asset_class": "Fundos",
+      "name": "Brave I FIC FIM CP",
+      "fund_category": "Multimercado",
+      "position_brl": 70000.0,
+      "alloc_pct": 14.82,
+      "since_inception_return_pct": 16.67,
+      "applied_brl": 60000.0,
+      "net_brl": 70000.0,
+      "quote_date": "2024-04-04"
+    },
+    {
+      "asset_class": "Fundos",
+      "name": "Truxt Long Bias Advisory FIC FIM",
+      "fund_category": "Long Bias",
+      "position_brl": 35000.0,
+      "alloc_pct": 7.41,
+      "since_inception_return_pct": -12.5,
+      "applied_brl": 40000.0,
+      "net_brl": 35000.0,
+      "quote_date": "2024-04-04"
+    },
+    {
+      "asset_class": "Fundos",
+      "name": "Riza Lotus Plus Advisory FIC FIRF REF DI CP",
+      "fund_category": "Renda Fixa / DI",
+      "position_brl": 40000.0,
+      "alloc_pct": 8.47,
+      "since_inception_return_pct": 11.11,
+      "applied_brl": 36000.0,
+      "net_brl": 40000.0,
+      "quote_date": "2024-04-04"
+    },
+    {
+      "asset_class": "Renda Fixa",
+      "name": "CDB Banco Inter - MAR/2027",
+      "issuer": "Banco Inter",
+      "index": "IPCA",
+      "spread_pct": 5.2,
+      "position_brl": 150000.0,
+      "alloc_pct": 31.77,
+      "applied_brl": 120000.0,
+      "apply_date": "2022-03-10",
+      "maturity_date": "2027-03-10",
+      "credit_rating": "BBB"
+    }
+  ]
+}

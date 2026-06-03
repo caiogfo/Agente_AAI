@@ -1,4 +1,4 @@
-"""Rule-based buy/sell/rebalance engine for the moderate profile.
+"""Rule-based buy/sell/rebalance engine, parameterized by the client's risk profile.
 
 Every recommendation is deterministic and explainable (carries the numbers that
 triggered it). The macro overlay is grounded in config.MACRO_FACTS (the XP report),
@@ -60,8 +60,11 @@ def _alloc_by_class(model: ClientModel) -> dict[str, float]:
     return out
 
 
-def analyze(model: ClientModel, prof: ProfitabilityResult) -> RecommendationSet:
-    pol = config.MODERATE_POLICY
+def analyze(model: ClientModel, prof: ProfitabilityResult,
+            policy: dict | None = None) -> RecommendationSet:
+    # policy adapts to THIS client's risk profile (Conservador/Moderado/Agressivo)
+    pol = policy or config.policy_for(model.client.get("risk_profile"))
+    prof_word = pol["profile"].lower()
     invested = model.invested
     patrimony = model.patrimony
     recs: list[Recommendation] = []
@@ -79,7 +82,7 @@ def analyze(model: ClientModel, prof: ProfitabilityResult) -> RecommendationSet:
                 f"esta acima do colchao de liquidez sugerido (~5%). Com a Selic em "
                 f"{config.MACRO_FACTS['selic_terminal_pct']:.2f}%, manter caixa parado tem "
                 f"alto custo de oportunidade: aplicar em pos-fixado/DI (CDI) captura ~"
-                f"{prof.cdi_month_pct:.2f}% ao mes sem fugir do perfil conservador."),
+                f"{prof.cdi_month_pct:.2f}% ao mes sem fugir do perfil {prof_word}."),
             tags=["cash-drag", "macro:selic-alta"],
         ))
 
@@ -106,7 +109,7 @@ def analyze(model: ClientModel, prof: ProfitabilityResult) -> RecommendationSet:
                 f"({over.current_pct:.1f}% vs alvo {over.target_pct:.0f}%) e subalocada "
                 f"em {under.asset_class} ({under.current_pct:.1f}% vs {under.target_pct:.0f}%). "
                 f"Migrar ~R${min(abs(over.delta_brl), under.delta_brl):,.0f} aproxima a "
-                f"carteira do alvo do perfil conservador e, no ciclo de juros altos, eleva o "
+                f"carteira do alvo do perfil {prof_word} e, no ciclo de juros altos, eleva o "
                 f"carrego em renda fixa BB+ ou superior."),
             tags=["rebalance", "macro:selic-alta"],
         ))
@@ -123,7 +126,7 @@ def analyze(model: ClientModel, prof: ProfitabilityResult) -> RecommendationSet:
             amount_brl=reduce_brl,
             headline=f"Reduzir fundos de maior volatilidade ({risky_pct:.1f}% > {cap_risky:.0f}%)",
             rationale=(
-                f"Para o perfil conservador, a exposicao a fundos mais volateis (acoes, long "
+                f"Para o perfil {prof_word}, a exposicao a fundos mais volateis (acoes, long "
                 f"bias e multimercado) soma {risky_pct:.1f}% do investido, acima do limite "
                 f"sugerido de {cap_risky:.0f}%. Migrar ~R${reduce_brl:,.0f} para fundos pos-fixados "
                 f"e renda fixa de qualidade reduz a oscilacao da carteira e preserva o carrego "
@@ -141,7 +144,7 @@ def analyze(model: ClientModel, prof: ProfitabilityResult) -> RecommendationSet:
                 headline=f"Reduzir concentracao em {p.ticker} ({p.alloc_pct:.2f}% > {cap:.0f}%)",
                 rationale=(
                     f"{p.ticker} representa {p.alloc_pct:.2f}% do investido, acima do limite "
-                    f"de {cap:.0f}% por ativo individual recomendado para o perfil conservador. "
+                    f"de {cap:.0f}% por ativo individual recomendado para o perfil {prof_word}. "
                     f"Aparar ~R${trim:,.0f} reduz risco idiossincratico."),
                 tags=["concentration"],
             ))
@@ -160,7 +163,7 @@ def analyze(model: ClientModel, prof: ProfitabilityResult) -> RecommendationSet:
                 headline=f"Manter o nucleo de {p.ticker}, apenas ajustando tamanho",
                 rationale=(
                     f"{p.ticker} acumula {sir:.1f}% desde a compra, mas e uma empresa "
-                    f"consolidada e pagadora de dividendos — compativel com o perfil conservador. "
+                    f"consolidada e pagadora de dividendos — compativel com o perfil {prof_word}. "
                     f"Tratamos a queda como desconto sobre um nucleo de qualidade: manter a "
                     f"posicao e apenas calibrar o tamanho (ver concentracao)."),
                 tags=["deep-loss", "profile-fit", "hold-core"],
@@ -184,8 +187,8 @@ def analyze(model: ClientModel, prof: ProfitabilityResult) -> RecommendationSet:
         action="INVESTIR", target="Acoes (dividendos)", priority=4,
         headline="Direcionar a parcela de acoes a blue chips pagadoras de dividendos",
         rationale=(
-            "O perfil conservador privilegia acoes de empresas consolidadas com historico de "
-            "dividendos. Candidatos no universo coberto: " + ", ".join(DIVIDEND_BLUECHIPS) +
+            f"O perfil {prof_word} privilegia acoes alinhadas a {pol['equity_preference']}. "
+            "Candidatos no universo coberto: " + ", ".join(DIVIDEND_BLUECHIPS) +
             ". Esses nomes adicionam renda recorrente e menor volatilidade ao sleeve de acoes."),
         tags=["profile-fit", "equities"],
     ))

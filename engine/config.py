@@ -35,6 +35,12 @@ MACRO_DATE = dt.date(2025, 2, 6)
 # "Last month" = the month that closed right before the snapshot.
 REFERENCE_MONTH = dt.date(2025, 4, 1)   # April 2025
 REFERENCE_MONTH_LABEL_PT = "abril de 2025"
+# Letter issue date: a few business days after the statement (07/05/2025), when
+# the April report would actually be sent. Pinned to the case timeline on purpose
+# (NOT datetime.now()), so re-running the build never anachronistically stamps the
+# letter with the current year.
+ISSUE_DATE = dt.date(2025, 5, 12)
+ISSUE_PLACE = "São Paulo"
 
 # ----------------------------------------------------------------------------
 # Macro reference figures (transcribed verbatim from the XP macro report so the
@@ -65,20 +71,52 @@ MACRO_FACTS = {
 # privilege fixed income and safe (post-fixed) funds in a high-Selic regime.
 # Target allocation below is the documented objective for this profile.
 # ----------------------------------------------------------------------------
-POLICY = {
-    "profile": "Conservador",
-    "min_credit_rating": "BB+",
-    "equity_preference": "empresas consolidadas pagadoras de dividendos",
-    # Documented objective allocation for a conservative Brazilian investor:
-    # capital-preservation tilt, fixed income as the core.
-    "target_allocation_pct": {"Acoes": 10.0, "Fundos": 30.0, "Renda Fixa": 60.0},
-    # Guardrails (tighter than a moderate profile)
-    "max_single_stock_pct": 5.0,       # of total invested
-    "deep_loss_threshold_pct": -30.0,  # since-inception loss that warrants review
-    "cash_drag_threshold_pct": 10.0,   # idle cash worth deploying
-    "max_risky_funds_pct": 15.0,       # cap on volatile (equity/long-bias/multimkt) funds
+# Policy per risk profile. The recommendation engine picks the policy that
+# matches each client's `risk_profile`, so the ANALYSES (target allocation,
+# guardrails) adapt per client, not just the numbers. This is what makes the
+# pipeline scale to a base with many clients and many advisors.
+POLICIES = {
+    "Conservador": {
+        "profile": "Conservador",
+        "min_credit_rating": "BB+",
+        "equity_preference": "empresas consolidadas pagadoras de dividendos",
+        # capital-preservation tilt, fixed income as the core
+        "target_allocation_pct": {"Acoes": 10.0, "Fundos": 30.0, "Renda Fixa": 60.0},
+        "max_single_stock_pct": 5.0,       # of total invested
+        "deep_loss_threshold_pct": -30.0,  # since-inception loss that warrants review
+        "cash_drag_threshold_pct": 10.0,   # idle cash worth deploying
+        "max_risky_funds_pct": 15.0,       # cap on volatile funds
+    },
+    "Moderado": {
+        "profile": "Moderado",
+        "min_credit_rating": "BB",
+        "equity_preference": "empresas consolidadas com bom histórico de resultados",
+        "target_allocation_pct": {"Acoes": 25.0, "Fundos": 35.0, "Renda Fixa": 40.0},
+        "max_single_stock_pct": 8.0,
+        "deep_loss_threshold_pct": -35.0,
+        "cash_drag_threshold_pct": 12.0,
+        "max_risky_funds_pct": 35.0,
+    },
+    "Agressivo": {
+        "profile": "Agressivo",
+        "min_credit_rating": "B",
+        "equity_preference": "teses de crescimento com maior potencial de retorno",
+        "target_allocation_pct": {"Acoes": 45.0, "Fundos": 35.0, "Renda Fixa": 20.0},
+        "max_single_stock_pct": 12.0,
+        "deep_loss_threshold_pct": -45.0,
+        "cash_drag_threshold_pct": 15.0,
+        "max_risky_funds_pct": 60.0,
+    },
 }
-# Backwards-compatible alias
+
+
+def policy_for(profile: str | None) -> dict:
+    """Pick the policy for a client's risk profile (default: Conservador)."""
+    return POLICIES.get((profile or "").strip().title(), POLICIES["Conservador"])
+
+
+# Backwards-compatible aliases (default profile used by single-client runs/tests)
+POLICY = POLICIES["Conservador"]
 MODERATE_POLICY = POLICY
 
 # Which fund strategies are "safe" (post-fixed / fixed income) vs volatile, and

@@ -136,7 +136,7 @@ Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
 - [x] **4.** Identidade XP (`engine/brand.py`) + gráficos (`charts.py`) + PDF (`render.py`, reportlab).
 - [x] **5.** Camada LLM Anthropic (`llm.py` + `narrate.py`) com narração ancorada + fallback.
 - [x] **6.** Grafo Rivet corrigido e completo (Anthropic, facts JSON, sem caminhos hardcoded).
-- [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(31 testes ok)**
+- [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(41 testes ok)**
 
 ## 6.1. Ajustes solicitados (rodadas seguintes)
 - **Provider:** validado com chave real. Narração Python via Claude; **grafo Rivet usa Opus
@@ -152,6 +152,62 @@ Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
   tamanho variado, análise de sentimento conforme o resultado, conexão ao objetivo de longo
   prazo. Pós-processamento remove "traços de IA". Aplicado à carta, ao `REPORT.md` e a esta doc.
 - **Câmbio 6,20:** atribuído explicitamente à **projeção da XP** (relatório 06/02/2025).
+
+## 6.2. Ajustes solicitados (rodada de revisão da carta)
+- **Rodapé corrigido:** o disclaimer era cortado em 240 caracteres (`disclaimer[120:240]`),
+  deixando "fale com o seu" solto. O `render.py` agora faz **quebra por palavra** (nunca corta
+  no meio de uma frase). Texto final: *"Material de caráter informativo. Rentabilidade passada
+  não garante resultados futuros. Estimativas estão sinalizadas no relatório. Em caso de dúvidas,
+  fale com o seu assessor."* (removida a cláusula "não constitui oferta/recomendação" a pedido).
+- **Abertura profissional:** o opener emocional ("Sei que ver o resultado... incomoda") foi
+  trocado por um enquadramento institucional ("Encaminhamos o relatório de acompanhamento...").
+  Ajustados o `SYSTEM_PROMPT` (registro formal) e o fallback determinístico. Removida saudação
+  duplicada ("Prezado Albert," que aparecia 2x) e dateline duplicado no corpo.
+- **Análise adicional — custo do caixa ocioso:** quantifica quanto o caixa parado deixa de
+  render ao CDI do mês (`cash_monthly_carry_brl` ≈ R$ 791,53/mês; ~R$ 10 mil/ano), ancorando a
+  recomendação nº 1 (alocar o caixa) com impacto financeiro concreto.
+- **Data de emissão (anti-anacronismo):** a carta agora traz um dateline ("São Paulo,
+  12 de maio de 2025"), **fixado na linha do tempo do case** (`config.ISSUE_DATE`), nunca no
+  relógio do sistema (`datetime.now()` estamparia o ano corrente). O relatório é de **abril/2025**,
+  sobre o extrato de **07/05/2025**, logo é enviado em **maio/2025**.
+
+## 6.3. Como o material é entregue (arquitetura × Rivet)
+> **O grafo Rivet sozinho NÃO contém os cálculos — isso é intencional.** O Rivet é a camada de
+> **narração**: ele lê o `build/facts.json` (produzido pelo motor Python) e escreve a carta. Os
+> cálculos de rentabilidade, recomendação e formatação vivem no pacote `engine/` (Python), porque
+> número de LLM aluciná. A entrega do case é o **projeto inteiro** (engine + Rivet + dados + docs),
+> não só o `.rivet-project`. Ver §"Entrega e escalabilidade" no `README.md`.
+
+## 6.4. Escalabilidade real (N clientes × M assessores × perfis)
+Garantia pedida: rodar cálculos **e** análises de forma automatizada para uma base, dado que
+cada cliente terá o mesmo conjunto de arquivos de input. Implementado:
+- **Política por perfil:** `config.POLICIES` (Conservador/Moderado/Agressivo) + `policy_for()`.
+  O `recommendations.analyze()` escolhe a política pelo `risk_profile` do cliente, então alvo de
+  alocação, cap por ativo e limites de fundos voláteis **mudam por cliente** (não só os números).
+- **Narração perfil-aware:** `narrate._system_prompt(facts)` e o fallback usam nome + perfil do
+  cliente; a carta fala "perfil moderado/agressivo" conforme o caso.
+- **Runner em lote:** `python -m engine.run --all` varre `data/*.json` e gera uma carta por
+  cliente, nomeada por slug em `Output/`. Cliente e **assessor** vêm do próprio JSON.
+- **Sem colisão:** gráficos namespaced por cliente (`build_all(facts, prefix=...)`); dados de
+  mercado (preços/CDI/IPCA/Ibov) são comuns ao mês e reaproveitados.
+- **Saudação por gênero:** campo `gender` → "Prezada/Prezado".
+- **Prova:** 2º cliente sintético `data/beatriz_almeida_portfolio.json` (Moderado, assessora
+  Carla Menezes). `--all` gera Albert + Beatriz com recomendações distintas. Travado por
+  `tests/test_multiclient.py`.
+- **Anti-anacronismo mantido:** datas do case fixas em `config` (nunca `datetime.now()`).
+
+## 6.5. Ingestão automática do extrato (fim da transcrição manual)
+Última etapa manual eliminada, sem abrir mão do anti-alucinação: `engine/ingest.py`.
+- **Princípio:** o LLM propõe a ESTRUTURA; uma camada determinística de RECONCILIAÇÃO confere o
+  DINHEIRO. `soma(posições)==investido`, `investido+caixa==patrimônio`, `%da posição==posição/investido`,
+  tudo ao centavo (`reconcile()`). Falhou → registro **rejeitado para revisão**, nunca aceito.
+- **Parsers determinísticos** de número lidam com os dois formatos do extrato (US `R$386,858.82`
+  e PT `R$ 30.000,00`; `%` PT `-41,7%`).
+- **Não inventa o que o extrato não tem:** categoria de estratégia do fundo, índice/spread do CDB
+  e rating ficam para a etapa de enriquecimento (explícita), não para a extração.
+- **Validação:** golden test (`tests/test_ingest.py`) garante que o extrato correto reconcilia e
+  que qualquer número adulterado é rejeitado; a extração ao vivo reproduz o JSON do Albert.
+- **Total de testes: 41.**
 
 ## 7. Homologação
 - `pytest -q` (todos os cálculos batem com valores conferidos à mão).

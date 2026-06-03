@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
@@ -103,8 +103,22 @@ def _header_footer(canvas, doc):
     canvas.setFillColor(_gray)
     canvas.setFont("Helvetica", 6.6)
     disclaimer = facts["disclaimer"]
-    canvas.drawString(MARGIN, FOOTER_H - 6 * mm, disclaimer[:120])
-    canvas.drawString(MARGIN, FOOTER_H - 9 * mm, disclaimer[120:240])
+    # word-wrap to the left column (leave room for the advisor block on the right)
+    # and render up to two lines, never cutting a word mid-way.
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+    avail = PAGE_W - 2 * MARGIN - 62 * mm
+    lines, cur = [], ""
+    for word in disclaimer.split():
+        trial = f"{cur} {word}".strip()
+        if stringWidth(trial, "Helvetica", 6.6) <= avail:
+            cur = trial
+        else:
+            lines.append(cur)
+            cur = word
+    if cur:
+        lines.append(cur)
+    for i, line in enumerate(lines[:2]):
+        canvas.drawString(MARGIN, FOOTER_H - (6 + 3 * i) * mm, line)
     canvas.setFont("Helvetica-Bold", 7.5)
     canvas.setFillColor(_blk)
     canvas.drawRightString(PAGE_W - MARGIN, FOOTER_H - 6 * mm,
@@ -262,7 +276,11 @@ def render_letter(facts: dict, narrative: dict, chart_paths: dict,
                                        onPage=_header_footer)])
 
     story = []
-    story.append(Paragraph(f'Prezado {facts["client"]["first_name"]},', S["h2"]))
+    dateline = ParagraphStyle("dateline", fontName="Helvetica", fontSize=9,
+                              textColor=_gray, alignment=TA_RIGHT, spaceAfter=8)
+    story.append(Paragraph(facts["meta"]["issue_dateline_pt"], dateline))
+    story.append(Paragraph(
+        f'{facts["client"]["salutation"]} {facts["client"]["first_name"]},', S["h2"]))
     story.append(Paragraph(narrative["greeting"], S["body"]))
     story.append(_kpi_row(facts, S))
     story.append(Spacer(1, 8))
@@ -301,5 +319,6 @@ if __name__ == "__main__":
     f = build_facts()
     charts = build_all(f)
     nar = build_narrative(f)
-    out = render_letter(f, nar, charts, config.OUTPUT_DIR / "Albert_relatorio_mensal.pdf")
+    out = render_letter(f, nar, charts,
+                        config.OUTPUT_DIR / "albert_da_silva_relatorio_mensal.pdf")
     print("PDF:", out)

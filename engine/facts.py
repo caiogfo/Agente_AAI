@@ -16,6 +16,11 @@ from .profitability import ProfitabilityResult, compute
 from .recommendations import RecommendationSet, analyze
 
 
+_PT_MONTHS = {1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril", 5: "maio",
+              6: "junho", 7: "julho", 8: "agosto", 9: "setembro", 10: "outubro",
+              11: "novembro", 12: "dezembro"}
+
+
 def _round(x, n=2):
     return None if x is None else round(float(x), n)
 
@@ -55,6 +60,11 @@ def build_facts(model: ClientModel | None = None) -> dict:
             "reference_month_label": prof.reference_month_label,
             "snapshot_date": config.SNAPSHOT_DATE.isoformat(),
             "macro_report_date": config.MACRO_DATE.isoformat(),
+            # issue date is pinned to the case timeline (May 2025), never now()
+            "issue_date": config.ISSUE_DATE.isoformat(),
+            "issue_dateline_pt": (
+                f"{config.ISSUE_PLACE}, {config.ISSUE_DATE.day} de "
+                f"{_PT_MONTHS[config.ISSUE_DATE.month]} de {config.ISSUE_DATE.year}"),
             "currency": "BRL",
             "language_letter": "pt-BR",
         },
@@ -63,6 +73,8 @@ def build_facts(model: ClientModel | None = None) -> dict:
             "full_name": model.client["full_name"],
             "account": model.client["account"],
             "risk_profile": model.client.get("risk_profile", "Moderado"),
+            # gender-aware salutation ("Prezada"/"Prezado"); default masculine
+            "salutation": "Prezada" if model.client.get("gender") == "F" else "Prezado",
         },
         "advisor": {"name": model.advisor["name"], "code": model.advisor["code"]},
         "totals": {
@@ -70,6 +82,12 @@ def build_facts(model: ClientModel | None = None) -> dict:
             "invested_brl": _round(model.invested, 2),
             "cash_brl": _round(model.cash, 2),
             "cash_ratio_pct": _round(recs.cash_ratio_pct),
+            # idle-cash carry: monthly yield foregone while the cash sits idle,
+            # measured at the real CDI of the month (reinforces the deploy-cash rec).
+            "cash_monthly_carry_brl": _round(
+                model.cash * bench["cdi_month_pct"] / 100.0, 2),
+            "cash_annual_carry_brl": _round(
+                model.cash * ((1.0 + bench["cdi_month_pct"] / 100.0) ** 12 - 1.0), 2),
         },
         "allocation": allocation,
         "performance": {
@@ -137,10 +155,9 @@ def build_facts(model: ClientModel | None = None) -> dict:
             f"comparacao podem, portanto, diferir ligeiramente."
         ),
         "disclaimer": (
-            "Material de carater informativo e nao constitui oferta ou recomendacao "
-            "individualizada de compra ou venda. Rentabilidade passada nao garante resultados "
-            "futuros. Estimativas estao sinalizadas no relatorio. Em caso de duvidas, fale com "
-            "o seu assessor."
+            "Material de carater informativo. Rentabilidade passada nao garante resultados "
+            "futuros. Estimativas estao sinalizadas no relatorio. Em caso de duvidas, fale "
+            "com o seu assessor."
         ),
     }
     return facts

@@ -31,9 +31,9 @@ _H = 3.5  # shared figure height (inches) for visual symmetry
 CLASS_LABELS = {"Acoes": "Ações", "Fundos": "Fundos", "Renda Fixa": "Renda Fixa"}
 
 
-def _save(fig, name: str) -> str:
+def _save(fig, name: str, prefix: str = "") -> str:
     config.BUILD_DIR.mkdir(parents=True, exist_ok=True)
-    path = config.BUILD_DIR / name
+    path = config.BUILD_DIR / f"{prefix}{name}"
     fig.savefig(path, bbox_inches="tight", facecolor="white", pad_inches=0.06)
     plt.close(fig)
     return str(path)
@@ -44,7 +44,7 @@ def _title(ax, text):
                  loc="left", pad=12)
 
 
-def allocation_donut(facts: dict) -> str:
+def allocation_donut(facts: dict, prefix: str = "") -> str:
     items = sorted(facts["allocation"], key=lambda a: -a["pct"])
     labels = [CLASS_LABELS.get(a["asset_class"], a["asset_class"]) for a in items]
     sizes = [a["pct"] for a in items]
@@ -73,10 +73,10 @@ def allocation_donut(facts: dict) -> str:
               columnspacing=1.3, handletextpad=0.5)
     _title(ax, "Composição da carteira")
     ax.set_aspect("equal")
-    return _save(fig, "alloc_donut.png")
+    return _save(fig, "alloc_donut.png", prefix)
 
 
-def benchmark_bar(facts: dict) -> str:
+def benchmark_bar(facts: dict, prefix: str = "") -> str:
     p = facts["performance"]
     b = facts["benchmarks"]
     items = [
@@ -107,10 +107,10 @@ def benchmark_bar(facts: dict) -> str:
     for s in ("top", "right", "left"):
         ax.spines[s].set_visible(False)
     _title(ax, f"Desempenho em {facts['meta']['reference_month_label']} vs. referências")
-    return _save(fig, "benchmark_bar.png")
+    return _save(fig, "benchmark_bar.png", prefix)
 
 
-def accumulated_bar(facts: dict) -> str:
+def accumulated_bar(facts: dict, prefix: str = "") -> str:
     acc = facts["accumulated"]["by_class"]
     order = ["Renda Fixa", "Fundos", "Acoes"]
     labels = [CLASS_LABELS.get(c, c) for c in order if c in acc]
@@ -134,14 +134,15 @@ def accumulated_bar(facts: dict) -> str:
     for s in ("top", "right", "bottom"):
         ax.spines[s].set_visible(False)
     _title(ax, "Retorno acumulado por classe")
-    return _save(fig, "accumulated_bar.png")
+    return _save(fig, "accumulated_bar.png", prefix)
 
 
-def build_all(facts: dict) -> dict[str, str]:
+def build_all(facts: dict, prefix: str = "") -> dict[str, str]:
+    # prefix namespaces the PNGs per client so batch runs never collide
     return {
-        "allocation": allocation_donut(facts),
-        "benchmark": benchmark_bar(facts),
-        "accumulated": accumulated_bar(facts),
+        "allocation": allocation_donut(facts, prefix),
+        "benchmark": benchmark_bar(facts, prefix),
+        "accumulated": accumulated_bar(facts, prefix),
     }
 
 
