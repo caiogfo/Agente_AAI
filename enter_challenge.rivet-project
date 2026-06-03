@@ -73,14 +73,14 @@ data:
           outgoingConnections:
             - output->"Chat Performance" cPerf/prompt
           visualData: 720/60/300/5//
-        '[cPerf]:chat "Chat Performance"':
+        '[cPerf]:chatAnthropic "Chat Performance"':
           data:
-            model: claude-sonnet-4-6
+            model: claude-sonnet-4-20250514
             temperature: 0.2
             top_p: 1
             useTopP: false
             maxTokens: 1024
-            enableFunctionUse: false
+            enableToolUse: false
             cache: false
             useAsGraphPartialOutput: true
           outgoingConnections:
@@ -111,14 +111,14 @@ data:
           outgoingConnections:
             - output->"Chat Macro" cMacro/prompt
           visualData: 720/380/300/7//
-        '[cMacro]:chat "Chat Macro"':
+        '[cMacro]:chatAnthropic "Chat Macro"':
           data:
-            model: claude-sonnet-4-6
+            model: claude-sonnet-4-20250514
             temperature: 0.2
             top_p: 1
             useTopP: false
             maxTokens: 1024
-            enableFunctionUse: false
+            enableToolUse: false
             cache: false
             useAsGraphPartialOutput: true
           outgoingConnections:
@@ -145,14 +145,14 @@ data:
           outgoingConnections:
             - output->"Chat Recommendations" cRecs/prompt
           visualData: 720/700/300/9//
-        '[cRecs]:chat "Chat Recommendations"':
+        '[cRecs]:chatAnthropic "Chat Recommendations"':
           data:
-            model: claude-sonnet-4-6
+            model: claude-sonnet-4-20250514
             temperature: 0.2
             top_p: 1
             useTopP: false
             maxTokens: 1024
-            enableFunctionUse: false
+            enableToolUse: false
             cache: false
             useAsGraphPartialOutput: true
           outgoingConnections:
@@ -195,18 +195,25 @@ data:
           outgoingConnections:
             - output->"Chat Letter" cLetter/prompt
           visualData: 1360/340/320/11//
-        '[cLetter]:chat "Chat Letter"':
+        '[cLetter]:chatAnthropic "Chat Letter"':
           data:
-            model: claude-sonnet-4-6
+            model: claude-sonnet-4-20250514
             temperature: 0.3
             top_p: 1
             useTopP: false
             maxTokens: 1500
-            enableFunctionUse: false
+            enableToolUse: false
             cache: false
             useAsGraphPartialOutput: true
-          outgoingConnections: []
+          outgoingConnections:
+            - response->"Final Letter" gOut/value
           visualData: 1740/340/260/12//
+        '[gOut]:graphOutput "Final Letter"':
+          data:
+            id: letter
+            dataType: string
+          outgoingConnections: []
+          visualData: 2090/340/240/13//
   metadata:
     description: >-
       Enter / XP case — grounded monthly advisor letter. Run the Python engine

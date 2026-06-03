@@ -28,7 +28,7 @@ python -m engine.run
 
 # narração com LLM (Anthropic Claude): defina a chave e rode
 export ANTHROPIC_API_KEY=sk-ant-...           # ou crie um arquivo .env (gitignored)
-export ANTHROPIC_MODEL=claude-sonnet-4-6      # opcional
+export ANTHROPIC_MODEL=claude-sonnet-4-20250514   # opcional
 python -m engine.run
 # (OpenAI gpt-4o-mini também é suportado via OPENAI_API_KEY)
 
@@ -51,6 +51,18 @@ python -m pytest -q
    **Anthropic API key** em *Settings*.
 3. Rode o grafo `main_challenge`: ele lê `build/facts.json` + a macro, narra performance /
    macro / recomendações e integra tudo na **carta final em português**.
+
+**Rodar o grafo headless (sem abrir o app):** há um runner Node em `rivet_runner/` que usa
+`@ironclad/rivet-node` + o plugin Anthropic:
+
+```bash
+cd rivet_runner && npm install        # uma vez
+cd .. && python -m engine.run --emit-facts   # gera build/facts.json
+node --env-file=.env rivet_runner/run_graph.mjs   # roda o grafo com Claude
+```
+
+Validado por execução real: o grafo carrega, resolve os nós `chatAnthropic`, lê o
+`facts.json` e chama a API — bastando uma `ANTHROPIC_API_KEY` válida no `.env`.
 
 Correções do v1 embutidas no grafo: sem caminhos `C:\Users\...`; macro restrito à fonte;
 cliente parametrizado (Albert, não "João"); nós **Anthropic Claude** com prompts **grounded**
