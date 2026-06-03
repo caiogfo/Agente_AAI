@@ -52,14 +52,20 @@ será colada no próximo passo.
 
 ## 3. Colar a chave da Anthropic
 
-Abra o `.env` (criado no passo anterior, dentro de `02_Projeto/`) e cole a chave do e-mail:
+Abra o `.env` com o comando abaixo (dentro de `02_Projeto/`):
 
 ```bash
+open -a TextEdit .env
+```
+
+O arquivo abrirá no TextEdit. Cole a chave no campo indicado:
+
+```
 ANTHROPIC_API_KEY=cole-a-chave-aqui
 ANTHROPIC_MODEL=claude-sonnet-4-6      # já vem assim; é o modelo validado p/ esta chave
 ```
 
-Salve. (No Mac: `open -e .env`.)
+Salve (`Cmd + S`) e feche.
 
 > **Sem a chave a carta ainda sai:** a narração cai no modo determinístico. Números,
 > gráficos e layout ficam idênticos — só o texto deixa de ser escrito pelo Claude.
@@ -73,7 +79,7 @@ make run        # gera a carta do cliente padrão (Albert) em 02_Projeto/Output/
 Abra o PDF gerado:
 
 ```bash
-open Output/albert_da_silva_relatorio_mensal.pdf
+open Output/albert_da_silva_relatorio_abr25.pdf
 ```
 
 ## 5. (Opcional) Rodar o grafo Rivet
