@@ -7,6 +7,9 @@ do perfil de risco e da macro da casa.
 **Princípio:** um motor Python **determinístico e testado** calcula tudo e produz um
 `facts.json`; o LLM (Claude) apenas **narra** os fatos e nunca inventa um número.
 
+> 🟢 **Nunca rodou um projeto assim?** Siga o **[GUIA_RAPIDO.md](GUIA_RAPIDO.md)** —
+> passo a passo do zero (instalar, baixar, colar a chave, gerar a carta).
+
 > 📄 Leia `PLANEJAMENTO.md` (documentação completa + diagnóstico do v1) e `REPORT.md`
 > (entregável: problemas, abordagem, próximos passos).
 
