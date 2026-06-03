@@ -113,13 +113,16 @@ Destaques do mês: **HAPV3 +76,4%** (recuperação) e **MRFG3 −16,4%**.
 ## 6. Plano de execução (subfases + checkpoints Git)
 
 - [x] **0.** Scaffold + `PLANEJAMENTO.md` + venv/deps.
-- [x] **1.** Loaders (`data_loader.py`) + dados de mercado BCB (`market_data.py`).
-- [x] **2.** Motor de rentabilidade (`profitability.py`) + **testes pytest** (16/16 ok).
-- [ ] **3.** Motor de recomendações rule-based (`recommendations.py`) + benchmarks + testes.
-- [ ] **4.** Identidade XP (`output/brand_xp.py`) + gráficos (`charts.py`) + PDF (reportlab).
-- [ ] **5.** Camada LLM Anthropic (`llm.py` + `narrate.py`) com narração ancorada nos fatos.
-- [ ] **6.** Grafo Rivet corrigido e completo (Anthropic, facts JSON, sem caminhos hardcoded).
-- [ ] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`.
+- [x] **1.** Loaders (`data_loader.py`) + dados de mercado BCB + Yahoo (`market_data.py`).
+- [x] **2.** Motor de rentabilidade (`profitability.py`) + **testes pytest**.
+- [x] **3.** Motor de recomendações rule-based (`recommendations.py`) + benchmarks + testes.
+- [x] **4.** Identidade XP (`engine/brand.py`) + gráficos (`charts.py`) + PDF (`render.py`, reportlab).
+- [x] **5.** Camada LLM Anthropic (`llm.py` + `narrate.py`) com narração ancorada + fallback.
+- [x] **6.** Grafo Rivet corrigido e completo (Anthropic, facts JSON, sem caminhos hardcoded).
+- [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(31 testes ok)**
+
+> **Pendente apenas:** validar a narração com a **chave Anthropic real** (o usuário criará a
+> key em console.anthropic.com). Sem a key, o pipeline roda com o fallback determinístico.
 
 ## 7. Homologação
 - `pytest -q` (todos os cálculos batem com valores conferidos à mão).

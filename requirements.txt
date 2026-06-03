@@ -1,9 +1,11 @@
+PyYAML==6.0.3
 anthropic==0.105.2
 certifi==2026.5.20
 matplotlib==3.9.4
 numpy==2.0.2
 pandas==2.3.3
 pillow==11.3.0
+pypdfium2==5.9.0
 pytest==8.4.2
 python-dateutil==2.9.0.post0
 reportlab==4.5.1

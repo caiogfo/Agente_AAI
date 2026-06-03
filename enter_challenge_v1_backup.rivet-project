@@ -1,0 +1,513 @@
+version: 4
+data:
+  attachedData:
+    trivet:
+      testSuites: []
+      version: 1
+  graphs:
+    YvuUKw6GH7rKzoZvTtSTC:
+      metadata:
+        description: ""
+        id: YvuUKw6GH7rKzoZvTtSTC
+        name: main_challenge
+      nodes:
+        '[2k7dTeu4ZMfcQsF31m6Cj]:prompt "Prompt"':
+          data:
+            enableFunctionCall: false
+            promptText: "## Prompt: Summarize the Client’s Portfolio Results\r
+
+              \r
+
+              ### Objective:\r
+
+              You are a financial analyst creating a monthly
+              investment report for a middle-market client. Below, you will
+              receive detailed portfolio performance data, including asset
+              allocation, returns (monthly, YTD, vs. benchmark), and any notable
+              movements or rebalancing actions.\r
+
+              \r
+
+              Your task is to write a concise, client-facing
+              summary (1–2 paragraphs max) of the portfolio’s performance,
+              highlighting what matters most from an analytical and strategic
+              point of view.\r
+
+              \r
+
+              ### What to include:\r
+
+              - Overall portfolio return\r
+
+              - Performance of key asset classes (e.g., equities,
+              fixed income, alternatives)\r
+
+              \r
+
+              ### Style & Tone:\r
+
+              - Professional, confident, and objective\r
+
+              - Avoid overly technical language — prioritize
+              clarity\r
+
+              \r
+
+              ### Example Output:\r
+
+              \r
+
+              > The portfolio posted a 1.2% return in May,
+              outperforming its benchmark by 0.4 percentage points. Equities
+              were the primary driver of performance, with U.S. and European
+              stocks benefiting from improved investor sentiment and solid
+              earnings reports. On the other hand, Brazilian fixed income had a
+              marginal negative contribution due to the flattening yield curve.
+              No significant reallocations were made during the period, as we
+              remain comfortable with the current positioning, particularly in
+              global equities and inflation-linked bonds.\r
+
+              \r
+
+              ---\r
+
+              \r
+
+              ### Input:\r
+
+              Below is the portfolio data and performance
+              commentary:\r
+
+              \r
+
+              {{portfolio_results}}\r\n"
+            type: user
+            useTypeInput: false
+          outgoingConnections:
+            - output->"Chat" uFA01_NatqcaHILBb9Oip/prompt
+          visualData: 875.8218156557556/229.2741519647472/280/20//
+        '[3e3_fHJXBrmSgQp2Zpv-Q]:chat "Chat"':
+          data:
+            additionalParameters: []
+            cache: false
+            enableFunctionUse: false
+            maxTokens: 1024
+            model: gpt-4o-mini
+            parallelFunctionCalling: true
+            stop: ""
+            temperature: 0.5
+            top_p: 1
+            useAdditionalParametersInput: false
+            useAsGraphPartialOutput: true
+            useFrequencyPenaltyInput: false
+            useMaxTokensInput: false
+            useModelInput: false
+            usePresencePenaltyInput: false
+            useStop: false
+            useStopInput: false
+            useTemperatureInput: false
+            useTopP: false
+            useTopPInput: false
+            useUseTopPInput: false
+            useUserInput: false
+          outgoingConnections:
+            - response->"Prompt" a5rVOdSyH-BJBRqXT_S8j/macro_outlook
+          visualData: 1300.7064682936445/846.3526676584802/230/16//
+        '[7vrg95To4eQ1_DGJeYmQY]:chat "Chat"':
+          data:
+            additionalParameters: []
+            cache: false
+            enableFunctionUse: false
+            maxTokens: 1024
+            model: gpt-4o-mini
+            parallelFunctionCalling: true
+            stop: ""
+            temperature: 0.5
+            top_p: 1
+            useAdditionalParametersInput: false
+            useAsGraphPartialOutput: true
+            useFrequencyPenaltyInput: false
+            useMaxTokensInput: false
+            useModelInput: false
+            usePresencePenaltyInput: false
+            useStop: false
+            useStopInput: false
+            useTemperatureInput: false
+            useTopP: false
+            useTopPInput: false
+            useUseTopPInput: false
+            useUserInput: false
+          visualData: 2280.9523985112296/837.0489493776594/230/25//
+        '[IRmu11M52SqjpMUwMzkU3]:readFile "Read File"':
+          data:
+            asBinary: false
+            errorOnMissingFile: false
+            path: ""
+            usePathInput: true
+          outgoingConnections:
+            - content->"Prompt" UjhTOc5lvzu3q8GmXFE4m/risk_profile
+          visualData: 461.8280030057738/950.0322377050547/280/13//
+        '[IWXX4pkv-TESkjtTRysc8]:text "Text"':
+          data:
+            text: C:\Users\blope\Downloads\XP Challenge v2\Input\XP - Albert's risk
+              profile.txt
+          outgoingConnections:
+            - output->"Read File" IRmu11M52SqjpMUwMzkU3/path
+          visualData: 12.255395731810163/952.5953499889117/330/13//
+        '[JQcM76mHxEdGnPnpnh1Kg]:text "Text"':
+          data:
+            text: C:\Users\blope\Downloads\XP Challenge v2\Input\XP - Albert's portfolio.txt
+          outgoingConnections:
+            - output->"Read File" ecEklxZpVnZv4d8lLa1g4/path
+          visualData: 10.447723238689875/496.8357176899988/330/2//
+        '[MqSgBX7j9HDqr07FZ0NFh]:text "Text"':
+          data:
+            text: C:\Users\blope\Downloads\XP Challenge v2\Input\XP - Macro analysis.txt
+          outgoingConnections:
+            - output->"Read File" eAziWdaCvhUPtrmsowquf/path
+          visualData: 32.75135087193208/1379.6570490664506/330/19//
+        '[UjhTOc5lvzu3q8GmXFE4m]:prompt "Prompt"':
+          data:
+            enableFunctionCall: false
+            promptText: "## Prompt: Summarize the Client’s Risk Profile\r
+
+              \r
+
+              ### Objective:\r
+
+              You are a financial analyst preparing a monthly
+              investment report for a middle-market client. Your goal is to
+              summarize the client’s investor profile in a clear, concise, and
+              professional paragraph.\r
+
+              \r
+
+              The full profile includes answers to the risk
+              tolerance questionnaire, age, income level, investment goals,
+              liquidity needs, investment horizon, and previous investment
+              experience.\r
+
+              \r
+
+              ### What to include:\r
+
+              In a single paragraph, summarize the following:\r
+
+              1. The client’s risk profile (e.g., conservative,
+              moderate, growth-oriented, aggressive)\r
+
+              2. Their investment horizon (short-, medium-, or
+              long-term)\r
+
+              3. Their tolerance for volatility and potential
+              losses\r
+
+              4. Their primary investment objectives (e.g., wealth
+              accumulation, income generation, retirement planning)\r
+
+              \r
+
+              ### Style & Tone:\r
+
+              - Professional and formal (like a private banking
+              advisor)\r
+
+              - Clear, technical, and investor-facing\r
+
+              - One paragraph only\r
+
+              \r
+
+              ### Example Output:\r
+
+              \r
+
+              > The client has a moderate risk profile, with a
+              long-term investment horizon and a balanced tolerance for
+              short-term market volatility. The main objective is capital
+              accumulation with an eye toward long-term financial independence
+              and future retirement planning.\r
+
+              \r
+
+              ---\r
+
+              \r
+
+              ### Input:\r
+
+              Below is the full client profile:\r
+
+              \r
+
+              {{risk_profile}}"
+            type: user
+            useTypeInput: false
+          outgoingConnections:
+            - output->"Chat" 3e3_fHJXBrmSgQp2Zpv-Q/prompt
+          visualData: 870.2458321738997/673.499247206671/280/21//
+        '[a5rVOdSyH-BJBRqXT_S8j]:prompt "Prompt"':
+          data:
+            enableFunctionCall: false
+            promptText: "## Prompt: Write the Monthly Investment Letter (in Portuguese)\r
+
+              \r
+
+              ### Objective:\r
+
+              You are a financial analyst preparing a monthly
+              investment letter to send to a middle-market client. You have
+              already written three summaries:\r
+
+              \r
+
+              1. **Client Risk Profile Summary**  \r
+
+              2. **Macroeconomic Outlook Summary**  \r
+
+              3. **Portfolio Results Summary**\r
+
+              \r
+
+              Your task is now to integrate these three inputs
+              into a single, well-structured investment letter, written in
+              **Portuguese**, that will be sent directly to the client.\r
+
+              \r
+
+              ### What to include:\r
+
+              In up to two pages (approx. 500 words), write a
+              polished investment letter that:\r
+
+              - Opens with a short greeting and context (\"Prezado
+              João, segue o relatório mensal...\")\r
+
+              - Presents the **portfolio’s performance**,
+              allocation\r
+
+              - Highlights the **macroeconomic outlook** and how
+              it impacts portfolio positioning going forward\r
+
+              - Make **recommendations** aligned with the client's
+              risk profile\r
+
+              - Closes with a professional sign-off and
+              availability for follow-ups\r
+
+              \r
+
+              ### Style & Tone:\r
+
+              - Formal, polished, and client-facing\r
+
+              - Avoid repetition across sections\r
+
+              - Use the voice of an experienced investment
+              advisor: clear, confident, and tailored\r
+
+              - Use transitions to connect sections smoothly
+              (e.g., “Nesse contexto macroeconômico...”, “Diante desse cenário,
+              nosso portfólio...”, “Seguimos atentos...”)\r
+
+              \r
+
+              ### Output format:\r
+
+              The output should be in well-formatted
+              **Portuguese**. Use paragraphs (not bullet points), keep it
+              concise but insightful, and avoid technical overload.\r
+
+              \r
+
+              ---\r
+
+              \r
+
+              ### Inputs:\r
+
+              Below are the outputs from the previous steps:\r
+
+              \r
+
+              #### 1. Client Risk Profile:\r
+
+              {{risk_profile}}\r
+
+              \r
+
+              #### 2. Macroeconomic Outlook:\r
+
+              {{macro_outlook}}\r
+
+              \r
+
+              #### 3. Portfolio Results:\r
+
+              {{portfolio_results}}"
+            type: user
+            useTypeInput: false
+          outgoingConnections:
+            - output->"Chat" 7vrg95To4eQ1_DGJeYmQY/prompt
+          visualData: 1902.3477757647697/643.0071439331064/280/23//
+        '[eAziWdaCvhUPtrmsowquf]:readFile "Read File"':
+          data:
+            asBinary: false
+            errorOnMissingFile: false
+            path: ""
+            usePathInput: true
+          outgoingConnections:
+            - content->"Prompt" wyJ8JbqwMIhV21LWPMfrU/macroeconomic_report
+          visualData: 482.3239581458957/1377.0939367825936/280/19//
+        '[ecEklxZpVnZv4d8lLa1g4]:readFile "Read File"':
+          data:
+            asBinary: false
+            errorOnMissingFile: false
+            path: ""
+            usePathInput: true
+          outgoingConnections:
+            - content->"Prompt" 2k7dTeu4ZMfcQsF31m6Cj/portfolio_results
+          visualData: 460.0203305126535/494.27260540614174/280/4//
+        '[hkIVtZzf81r-fxSF15I_X]:chat "Chat"':
+          data:
+            additionalParameters: []
+            cache: false
+            enableFunctionUse: false
+            maxTokens: 1024
+            model: gpt-4o-mini
+            parallelFunctionCalling: true
+            stop: ""
+            temperature: 0.5
+            top_p: 1
+            useAdditionalParametersInput: false
+            useAsGraphPartialOutput: true
+            useFrequencyPenaltyInput: false
+            useMaxTokensInput: false
+            useModelInput: false
+            usePresencePenaltyInput: false
+            useStop: false
+            useStopInput: false
+            useTemperatureInput: false
+            useTopP: false
+            useTopPInput: false
+            useUseTopPInput: false
+            useUserInput: false
+          outgoingConnections:
+            - response->"Prompt" a5rVOdSyH-BJBRqXT_S8j/portfolio_results
+          visualData: 1302.9369025256112/1266.0437520842254/230/22//
+        '[uFA01_NatqcaHILBb9Oip]:chat "Chat"':
+          data:
+            additionalParameters: []
+            cache: false
+            enableFunctionUse: false
+            maxTokens: 1024
+            model: gpt-4o-mini
+            parallelFunctionCalling: true
+            stop: ""
+            temperature: 0.5
+            top_p: 1
+            useAdditionalParametersInput: false
+            useAsGraphPartialOutput: true
+            useFrequencyPenaltyInput: false
+            useMaxTokensInput: false
+            useModelInput: false
+            usePresencePenaltyInput: false
+            useStop: false
+            useStopInput: false
+            useTemperatureInput: false
+            useTopP: false
+            useTopPInput: false
+            useUseTopPInput: false
+            useUserInput: false
+          outgoingConnections:
+            - response->"Prompt" a5rVOdSyH-BJBRqXT_S8j/risk_profile
+          visualData: 1310.7431160433127/361.980981417884/230/9//
+        '[wyJ8JbqwMIhV21LWPMfrU]:prompt "Prompt"':
+          data:
+            enableFunctionCall: false
+            promptText: "## Prompt: Summarize the Macroeconomic Outlook\r
+
+              \r
+
+              ### Objective:\r
+
+              You are a financial analyst preparing a monthly
+              investment report for a middle-market client. Your task is to
+              analyze and summarize a set of macroeconomic insights — such as
+              reports, articles, and analyst briefings — into a clear, concise
+              paragraph in a professional tone.\r
+
+              \r
+
+              This summary will later be integrated into a
+              client-facing investment letter, so it should highlight only the
+              most relevant points from the perspective of an investor.\r
+
+              \r
+
+              ### What to include:\r
+
+              Summarize in a single, well-structured paragraph:\r
+
+              - Key macroeconomic trends (e.g., inflation,
+              interest rates, GDP, global risks)\r
+
+              - Market sentiment (positive, cautious, volatile,
+              etc.)\r
+
+              - Relevant forecasts or analyst consensus\r
+
+              - Any significant updates that could impact
+              investment decisions\r
+
+              \r
+
+              ### Style & Tone:\r
+
+              - Formal and analytical\r
+
+              - Jargon is acceptable, but avoid unnecessary
+              complexity\r
+
+              - Keep it investor-facing: prioritize what matters
+              for portfolio decisions\r
+
+              \r
+
+              ### Example Output:\r
+
+              \r
+
+              > In May, global markets reflected a cautiously
+              optimistic sentiment amid signals of moderating inflation in the
+              U.S. and stable interest rates in Europe. Brazil’s Central Bank
+              continued its rate-cutting cycle, while China’s
+              slower-than-expected recovery raised concerns across emerging
+              markets. Overall, the macroeconomic backdrop suggests a supportive
+              environment for risk assets, though geopolitical tensions and U.S.
+              election dynamics remain key watchpoints.\r
+
+              \r
+
+              ---\r
+
+              \r
+
+              ### Input:\r
+
+              Below is the raw macroeconomic commentary for the
+              month:\r
+
+              \r
+
+              {{macroeconomic_report}}"
+            type: user
+            useTypeInput: false
+          outgoingConnections:
+            - output->"Chat" hkIVtZzf81r-fxSF15I_X/prompt
+          visualData: 869.1307171559769/1127.760990198263/280/26//
+  metadata:
+    description: ""
+    id: kjLT_7qKu1l3CMXmUjSix
+    title: Enter Challenge
+  plugins: []
