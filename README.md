@@ -18,30 +18,39 @@ do perfil de risco e da macro da casa.
 - Benchmarks reais: **CDI 1,06%**, **IPCA 0,43%**, **Ibovespa +3,69%**, **S&P 500 −0,76%**.
 - Carta final: `Output/albert_da_silva_relatorio_mensal.pdf` (2 páginas, datada de **12/05/2025**).
 
-## Como rodar
+## Início rápido (2 comandos)
+
+> Pré-requisito: Python 3.9+. **Não precisa de chave de API** — sem chave, a narração
+> usa o fallback determinístico e a carta sai igual em estrutura e números.
+
+```bash
+make setup     # cria o venv e instala as dependências
+make run       # gera a carta do Albert em Output/
+```
+
+Outros atalhos (rode `make help` para ver todos):
+
+```bash
+make batch     # gera uma carta por cliente em data/*.json (Albert + Beatriz)
+make ingest    # demonstra a ingestão do extrato real + reconciliação
+make test      # roda os 42 testes
+make clean     # remove artefatos gerados
+```
+
+**Narração com LLM (opcional).** Para que o Claude escreva a carta (em vez do fallback),
+crie um arquivo `.env` na raiz (veja `.env.example`) com `ANTHROPIC_API_KEY=...` e rode
+`make run` de novo. OpenAI também é suportado via `OPENAI_API_KEY`.
+
+<details><summary>Sem <code>make</code>? Os comandos equivalentes</summary>
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-# pipeline completo (usa fallback determinístico se não houver chave LLM)
-python -m engine.run                 # cliente único (Albert)
-python -m engine.run --all           # LOTE: gera uma carta por JSON em data/
-
-# narração com LLM (Anthropic Claude): defina a chave e rode
-export ANTHROPIC_API_KEY=sk-ant-...           # ou crie um arquivo .env (gitignored)
-export ANTHROPIC_MODEL=claude-sonnet-4-6   # opcional
-python -m engine.run
-# (OpenAI gpt-4o-mini também é suportado via OPENAI_API_KEY)
-
-# opções úteis
-python -m engine.run --no-llm        # força narração determinística
-python -m engine.run --emit-facts    # (re)escreve build/facts.json (input do Rivet)
-python -m engine.run --live          # anexa snapshot de cotação atual (contexto)
-
-# testes (aritmética conferida à mão, 0% de tolerância)
-python -m pytest -q
+python -m engine.run            # cliente único (Albert)
+python -m engine.run --all      # lote
+python -m pytest -q             # testes
 ```
+</details>
 
 ## Fluxo Rivet (grounded)
 
@@ -87,7 +96,7 @@ engine/            # motor determinístico + narração + render
   llm.py / narrate.py # Claude + fallback determinístico (perfil-aware)
   render.py        # PDF de 2 páginas (reportlab)
   run.py           # CLI: cliente único ou --all (lote)
-  tests/           # 41 testes (inclui multi-cliente/perfil e ingestão)
+  tests/           # 42 testes (inclui multi-cliente/perfil e ingestão)
 data/              # 1 JSON por cliente (Albert + Beatriz demo); mesmo schema
 Input/ Output/     # insumos do case e carta gerada
 *.rivet-project    # grafo v2 (corrigido) + backup do v1
@@ -132,6 +141,35 @@ cliente (cálculos **e** análises), nomeada por cliente em `Output/`.
   totais ao centavo (soma das posições == investido; investido+caixa == patrimônio; % de cada
   posição == fatia do investido). Se não bate, **rejeita para revisão** em vez de aceitar número
   errado. Validado contra o extrato real do Albert (`engine/ingest.py`).
+
+### Exemplo trabalhado: dois clientes, mesmo pipeline
+
+Como os dados são consumidos, de forma idêntica e escalável, para clientes diferentes:
+
+```
+Input do cliente (extrato)                  Pipeline (igual para todos)            Saída
+──────────────────────────                  ───────────────────────────           ─────────────────────────────
+Albert  → extrato real (Input/*.txt)  ─►  ingest.py (LLM + reconciliação)  ─┐
+                                                                            ├─► run.py --all ─► engine/ ─► carta PDF
+Beatriz → 2º cliente já estruturado   ─────────────────────────────────────┘     (cálculo + análise + narração)
+          (data/beatriz_almeida_portfolio.json)
+```
+
+| | **Albert da Silva** | **Beatriz Almeida** |
+|---|---|---|
+| Input | extrato real XP (`Input/`), via `ingest.py` | JSON estruturado (`data/`), 2º cliente demo |
+| Perfil | Conservador | Moderado |
+| Assessor | Antonio Bicudo (A7699) | Carla Menezes (B1234) |
+| Patrimônio | R$ 386.858,82 | R$ 500.202,50 |
+| Alocação atual | 19,3 / 67,7 / 13,0 (Ações/Fundos/RF) | 37,5 / 30,7 / 31,8 |
+| Alvo do perfil | 10 / 30 / 60 (cap 5%/ativo) | 25 / 35 / 40 (cap 8%) |
+| Recomendações | caixa ocioso, reduzir fundos voláteis (>15%), sair de ARZZ3/HAPV3, aparar LREN3 | rebalancear Ações→RF, aparar ABEV3/ITUB4/VALE3 (>8%), tilt dividendos |
+| Carta | `Output/albert_da_silva_relatorio_mensal.pdf` | `Output/beatriz_almeida_relatorio_mensal.pdf` |
+
+O que muda é só o **dado** (o JSON do cliente). As análises se adaptam sozinhas ao perfil; uma
+base com milhares de clientes é o mesmo `--all` sobre `data/*.json`. Beatriz é um cliente
+**sintético** (marcado no JSON) incluído como prova de escala; o Albert exercita o fluxo
+completo a partir do extrato real.
 
 *Identidade visual XP com logo oficial no cabeçalho. Material informativo —
 rentabilidade passada não garante resultados futuros.*

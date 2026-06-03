@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 from dataclasses import asdict
 
 from . import config
@@ -23,6 +24,41 @@ _PT_MONTHS = {1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril", 5: "maio",
 
 def _round(x, n=2):
     return None if x is None else round(float(x), n)
+
+
+# Fund/RF legal-structure tokens that add noise without identifying the product.
+_FUND_NOISE = {"FIC", "FIM", "FIA", "FIRF", "FIDC", "REF", "DI", "CP", "RF",
+               "SIMPLES", "ADVISORY"}
+
+
+def _short_name(name: str, asset_class: str = "") -> str:
+    """Reader-friendly display name (drops legal-structure suffixes from funds).
+
+    'Riza Lotus Plus Advisory FIC FIRF REF DI CP' -> 'Riza Lotus Plus'
+    'CDB BANCO C6 CONSIGNADO S.A. - SET/2024'      -> 'CDB Banco C6'
+    Stock tickers and already-short names pass through unchanged.
+    """
+    if not name:
+        return name
+    if asset_class == "Renda Fixa" or name.upper().startswith("CDB"):
+        base = re.split(r"\s+-\s+", name)[0]                 # drop "- SET/2024"
+        base = re.sub(r"\bS\.?/?A\.?\b.*", "", base, flags=re.I).strip()
+        kept = base.split()[:3]                              # "CDB BANCO C6"
+
+        def _cap(t: str) -> str:                             # keep codes (CDB, C6, B3)
+            if t.upper() in ("CDB", "LCI", "LCA", "CRI", "CRA", "LC"):
+                return t.upper()
+            if len(t) <= 3 and any(c.isdigit() for c in t):
+                return t.upper()
+            return t.capitalize()
+
+        return " ".join(_cap(t) for t in kept)
+    out: list[str] = []
+    for tok in name.split():
+        if tok.upper().strip(".") in _FUND_NOISE:
+            break
+        out.append(tok)
+    return " ".join(out) if out else name
 
 
 def build_facts(model: ClientModel | None = None) -> dict:
@@ -47,7 +83,8 @@ def build_facts(model: ClientModel | None = None) -> dict:
     worst = min(stock_legs, key=lambda l: l.monthly_return_pct)
 
     legs = [{
-        "name": l.name, "asset_class": l.asset_class, "alloc_pct": _round(l.alloc_pct),
+        "name": l.name, "short_name": _short_name(l.name, l.asset_class),
+        "asset_class": l.asset_class, "alloc_pct": _round(l.alloc_pct),
         "monthly_return_pct": _round(l.monthly_return_pct), "is_estimate": l.is_estimate,
         "contribution_pp": _round(l.contribution_pp, 3),
         "since_inception_return_pct": _round(l.since_inception_return_pct),

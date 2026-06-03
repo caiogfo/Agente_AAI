@@ -61,6 +61,11 @@ projection, not a guess).
 - For funds, present the month's return as ESTIMATED BY EACH STRATEGY'S MARKET \
 BENCHMARK (CDI for post-fixed/multimarket, Ibovespa for equity/long-biased). \
 NEVER say data was "missing" or "not provided".
+- READABILITY: refer to any holding by its `short_name` field, never the full legal \
+name (no "FIC FIM", "Advisory", "S.A."). Do NOT enumerate every fund one by one; \
+describe them by strategy GROUP (the post-fixed/multimarket sleeve tied to CDI, the \
+equity/long-biased sleeve tied to Ibovespa) and name at most one or two standouts. \
+The goal is a clean, uncluttered read for the client.
 - Mention the ACCUMULATED return since the contributions were made.
 - Do NOT use em dashes or en dashes ("—", "–") anywhere. Use commas, periods or \
 parentheses. No markdown, no bullet symbols, no headings: clean paragraphs only.
@@ -91,13 +96,19 @@ def _user_prompt(facts: dict) -> str:
     )
 
 
+# English jargon that occasionally leaks into the Portuguese letter.
+_JARGON_PT = {"sleeve": "parcela", "Sleeve": "Parcela", "sleeves": "parcelas"}
+
+
 # --------------------------------------------------------------- humanizer
 def _humanize(text: str) -> str:
-    """Strip AI tells: em/en dashes, stray markdown, double spaces."""
+    """Strip AI tells: em/en dashes, stray markdown, English jargon, double spaces."""
     text = text.replace(" — ", ", ").replace("—", ", ").replace(" – ", ", ").replace("–", "-")
     text = re.sub(r"(?m)^\s*#{1,6}\s*", "", text)      # markdown headings
     text = text.replace("**", "").replace("*", "")      # bold/italic markers
     text = re.sub(r"(?m)^\s*[-•]\s+", "", text)         # stray bullets
+    for en, pt in _JARGON_PT.items():                   # keep the letter in PT
+        text = re.sub(rf"\b{en}\b", pt, text)
     text = re.sub(r"[ \t]{2,}", " ", text)
     text = re.sub(r"\s+([,.;:])", r"\1", text)
     return text.strip()

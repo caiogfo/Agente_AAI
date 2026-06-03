@@ -136,7 +136,7 @@ Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
 - [x] **4.** Identidade XP (`engine/brand.py`) + gráficos (`charts.py`) + PDF (`render.py`, reportlab).
 - [x] **5.** Camada LLM Anthropic (`llm.py` + `narrate.py`) com narração ancorada + fallback.
 - [x] **6.** Grafo Rivet corrigido e completo (Anthropic, facts JSON, sem caminhos hardcoded).
-- [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(41 testes ok)**
+- [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(42 testes ok)**
 
 ## 6.1. Ajustes solicitados (rodadas seguintes)
 - **Provider:** validado com chave real. Narração Python via Claude; **grafo Rivet usa Opus
@@ -207,7 +207,16 @@ cada cliente terá o mesmo conjunto de arquivos de input. Implementado:
   e rating ficam para a etapa de enriquecimento (explícita), não para a extração.
 - **Validação:** golden test (`tests/test_ingest.py`) garante que o extrato correto reconcilia e
   que qualquer número adulterado é rejeitado; a extração ao vivo reproduz o JSON do Albert.
-- **Total de testes: 41.**
+- **Total de testes: 42.**
+
+## 6.6. Legibilidade dos nomes de ativos (escalável)
+Nomes longos de fundo poluíam a carta. Solução **genérica** (regra, não de-para por fundo, então
+vale para milhares de ativos): `facts._short_name()` remove tokens de estrutura jurídica
+(FIC/FIM/FIA/FIRF/REF/DI/CP/Advisory, "S.A.", sufixo "- MÊS/ANO" de CDB). Ex.: "Riza Lotus Plus
+Advisory FIC FIRF REF DI CP" → "Riza Lotus Plus"; "CDB BANCO C6 CONSIGNADO S.A. - SET/2024" →
+"CDB Banco C6". Cada leg ganha `short_name` nos facts. A narração foi instruída a **agrupar fundos
+por estratégia** (CDI vs Ibovespa) e citar só 1-2 destaques, em vez de listar todos. O humanizador
+ainda troca jargão em inglês que vaza (ex.: "sleeve" → "parcela"). Travado por teste.
 
 ## 7. Homologação
 - `pytest -q` (todos os cálculos batem com valores conferidos à mão).

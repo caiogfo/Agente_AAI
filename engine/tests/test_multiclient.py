@@ -5,7 +5,7 @@ with no code changes, so a base of N clients can be processed in batch.
 """
 from engine import config
 from engine.data_loader import load_client
-from engine.facts import build_facts
+from engine.facts import _short_name, build_facts
 from engine.market_data import get_benchmarks
 from engine.profitability import compute
 from engine.recommendations import analyze
@@ -45,6 +45,18 @@ def test_analyses_adapt_to_the_moderate_profile():
     # rationales speak the client's profile, not a hardcoded "conservador"
     blob = " ".join(r.rationale for r in rs.recommendations)
     assert "moderado" in blob and "conservador" not in blob
+
+
+def test_short_names_drop_legal_structure_noise():
+    # generic rule (not a per-fund lookup), so it scales to any holding
+    assert _short_name("Riza Lotus Plus Advisory FIC FIRF REF DI CP", "Fundos") == "Riza Lotus Plus"
+    assert _short_name("Truxt Long Bias Advisory FIC FIM", "Fundos") == "Truxt Long Bias"
+    assert _short_name("CDB BANCO C6 CONSIGNADO S.A. - SET/2024", "Renda Fixa") == "CDB Banco C6"
+    assert _short_name("LREN3", "Acoes") == "LREN3"            # tickers pass through
+    # every leg in the facts carries a short_name no longer than the full name
+    f = build_facts()
+    for leg in f["performance"]["legs"]:
+        assert leg["short_name"] and len(leg["short_name"]) <= len(leg["name"])
 
 
 def test_narration_speaks_the_client_profile():

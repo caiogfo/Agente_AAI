@@ -60,7 +60,9 @@ Na **formatação**, a carta sai em PDF de duas páginas, com o logo da XP no ca
 data de emissão, indicadores, gráficos e cartões de recomendação, gerada por código e
 modular por assessor e por cliente, pronta para escalar. A data segue a linha do tempo do
 case (12 de maio de 2025, poucos dias após o extrato de 07/05), e não o relógio da máquina,
-para a carta nunca sair com um ano anacrônico.
+para a carta nunca sair com um ano anacrônico. Para a leitura ficar limpa, nomes longos de
+fundo são encurtados por uma regra genérica (sem de-para por ativo, então escala) e a narração
+agrupa os fundos por estratégia em vez de listar todos.
 
 Sobre **escala**, o pipeline já roda uma base inteira. Cada cliente é um JSON em `data/` com
 seu próprio cliente e assessor, e `python -m engine.run --all` gera uma carta por cliente. As
@@ -78,7 +80,7 @@ sua fatia do investido). Se algo não bate, o registro é rejeitado para revisã
 silêncio. Validei contra o extrato real do Albert, que reconcilia e reproduz a transcrição feita
 à mão.
 
-A garantia de qualidade vem de 41 testes em pytest, com a aritmética conferida à mão até
+A garantia de qualidade vem de 42 testes em pytest, com a aritmética conferida à mão até
 o centavo. Há testes que travam regressões clássicas, como o nome do cliente, a coerência
 do macro com a fonte, a ausência de caminhos de Windows no grafo e a reconciliação da ingestão
 (o extrato correto passa, qualquer número adulterado é rejeitado).
