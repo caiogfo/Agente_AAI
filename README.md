@@ -26,11 +26,11 @@ pip install -r requirements.txt
 # pipeline completo (usa fallback determinístico se não houver chave LLM)
 python -m engine.run
 
-# narração com LLM (OpenAI gpt-4o-mini): defina a chave e rode
-export OPENAI_API_KEY=sk-...                  # ou crie um arquivo .env (gitignored)
-export OPENAI_MODEL=gpt-4o-mini               # opcional
+# narração com LLM (Anthropic Claude): defina a chave e rode
+export ANTHROPIC_API_KEY=sk-ant-...           # ou crie um arquivo .env (gitignored)
+export ANTHROPIC_MODEL=claude-sonnet-4-6      # opcional
 python -m engine.run
-# (Anthropic Claude também é suportado via ANTHROPIC_API_KEY)
+# (OpenAI gpt-4o-mini também é suportado via OPENAI_API_KEY)
 
 # opções úteis
 python -m engine.run --no-llm        # força narração determinística
@@ -48,12 +48,12 @@ python -m pytest -q
 
 1. `python -m engine.run --emit-facts` → gera `build/facts.json`.
 2. Abra o `.rivet-project` no [Rivet](https://rivet.ironcladapp.com/) e configure a
-   **OpenAI API key** em *Settings*.
+   **Anthropic API key** em *Settings*.
 3. Rode o grafo `main_challenge`: ele lê `build/facts.json` + a macro, narra performance /
    macro / recomendações e integra tudo na **carta final em português**.
 
 Correções do v1 embutidas no grafo: sem caminhos `C:\Users\...`; macro restrito à fonte;
-cliente parametrizado (Albert, não "João"); modelo **gpt-4o-mini** com prompts **grounded**
+cliente parametrizado (Albert, não "João"); nós **Anthropic Claude** com prompts **grounded**
 no `facts.json` (em vez de texto cru a temp 0,5).
 
 ## Estrutura

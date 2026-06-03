@@ -48,7 +48,8 @@ def main(argv=None) -> int:
     charts = build_all(facts)
 
     use_llm = (not args.no_llm) and llm.have_key()
-    print(f"• Narrating ({'Claude' if use_llm else 'deterministic fallback'})…")
+    label = (llm.provider() or "none") if use_llm else "deterministic fallback"
+    print(f"• Narrating ({label})…")
     narrative = build_narrative(facts, use_llm=use_llm)
     print(f"  source: {narrative.get('_source')}")
 

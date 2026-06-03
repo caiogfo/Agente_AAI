@@ -1,0 +1,9 @@
+{
+  "name": "rivet-runner",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "dependencies": {
+    "@ironclad/rivet-node": "^1.25.0"
+  }
+}
