@@ -32,7 +32,10 @@ def test_second_client_carries_its_own_advisor_and_profile():
     f = build_facts(load_client(portfolio_json=DEMO))
     assert f["client"]["first_name"] == "Beatriz"
     assert f["advisor"]["name"] == "Carla Menezes"          # different advisor
+    assert f["advisor"]["title"] == "Assessora"             # gender-aware title
     assert f["client"]["risk_profile"] == "Moderado"        # different profile
+    # the default client's male advisor stays masculine
+    assert build_facts()["advisor"]["title"] == "Assessor"
 
 
 def test_analyses_adapt_to_the_moderate_profile():

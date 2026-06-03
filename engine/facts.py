@@ -113,7 +113,11 @@ def build_facts(model: ClientModel | None = None) -> dict:
             # gender-aware salutation ("Prezada"/"Prezado"); default masculine
             "salutation": "Prezada" if model.client.get("gender") == "F" else "Prezado",
         },
-        "advisor": {"name": model.advisor["name"], "code": model.advisor["code"]},
+        "advisor": {
+            "name": model.advisor["name"], "code": model.advisor["code"],
+            # gender-aware job title ("Assessora"/"Assessor"); default masculine
+            "title": "Assessora" if model.advisor.get("gender") == "F" else "Assessor",
+        },
         "totals": {
             "patrimony_brl": _round(model.patrimony, 2),
             "invested_brl": _round(model.invested, 2),

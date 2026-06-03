@@ -9,7 +9,8 @@
   },
   "advisor": {
     "code": "B1234",
-    "name": "Carla Menezes"
+    "name": "Carla Menezes",
+    "gender": "F"
   },
   "totals": {
     "patrimonio_total": 500202.5,
