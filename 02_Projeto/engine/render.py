@@ -252,7 +252,7 @@ def render_letter(facts: dict, narrative: dict, chart_paths: dict,
         str(out_path), pagesize=A4,
         leftMargin=MARGIN, rightMargin=MARGIN,
         topMargin=HEADER_H + 6 * mm, bottomMargin=FOOTER_H + 4 * mm,
-        title=f"Relatório Mensal — {facts['client']['full_name']}",
+        title=f"Relatório Mensal de {facts['client']['full_name']}",
         author=facts["advisor"]["name"],
     )
     doc._facts = facts
@@ -320,5 +320,5 @@ if __name__ == "__main__":
     charts = build_all(f)
     nar = build_narrative(f)
     out = render_letter(f, nar, charts,
-                        config.OUTPUT_DIR / "albert_da_silva_relatorio_mensal.pdf")
+                        config.OUTPUT_DIR / "albert_da_silva_relatorio_abr25.pdf")
     print("PDF:", out)

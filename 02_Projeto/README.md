@@ -1,17 +1,17 @@
-# AI Financial Advisor — XP / Enter case
+# AI Financial Advisor, XP / Enter case
 
 PoC que gera, de ponta a ponta, um **relatório mensal de investimentos** (carta em PDF,
-em português, com identidade visual XP) para clientes middle-market — a partir do extrato,
+em português, com identidade visual XP) para clientes middle-market, a partir do extrato,
 do perfil de risco e da macro da casa.
 
 **Princípio:** um motor Python **determinístico e testado** calcula tudo e produz um
 `facts.json`; o LLM (Claude) apenas **narra** os fatos e nunca inventa um número.
 
-> 📁 **Este README fica em `02_Projeto/`** — onde todo o código roda. A raiz do
+> 📁 **Este README fica em `02_Projeto/`**, onde todo o código roda. A raiz do
 > repositório guarda os entregáveis: a carta pronta, o `COMO_RODAR.md` e o `REPORT.md`;
 > os insumos do case em `01_Insumos_do_case/` e os grafos em `03_Rivet/`.
 
-> 🟢 **Quer só rodar?** Siga o **[COMO_RODAR.md](../COMO_RODAR.md)** (na raiz) — passo a
+> 🟢 **Quer só rodar?** Siga o **[COMO_RODAR.md](../COMO_RODAR.md)** (na raiz), passo a
 > passo direto (ambiente, chave, gerar a carta, rodar o Rivet), com cada comando comentado.
 
 > 📄 Leia `../04_Planejamento/PLANEJAMENTO.md` (documentação completa + diagnóstico do v1)
@@ -20,10 +20,12 @@ do perfil de risco e da macro da casa.
 ## Resultado (Albert, abril/2025)
 
 - Ações **+7,74%** (apurado pelos preços) · Renda Fixa **+0,88%** (IPCA+spread) ·
-  Fundos estimados por estratégia (CDI/Ibovespa) · **Carteira ≈ +2,58%** (estimativa).
+  Fundos pela **cota real da CVM por CNPJ** quando disponível; nos fundos do Albert (classes
+  *Advisory* sem CNPJ no extrato) cai para a estimativa por estratégia (CDI/Ibovespa) ·
+  **Carteira ≈ +2,58%** (estimativa).
 - Acumulado desde os aportes: **−2,03%** (Ações −38,7% pesam; RF +34,9% e Fundos +11,2% seguram).
 - Benchmarks reais: **CDI 1,06%**, **IPCA 0,43%**, **Ibovespa +3,69%**, **S&P 500 −0,76%**.
-- Carta final: `Output/albert_da_silva_relatorio_mensal.pdf` (2 páginas, datada de **12/05/2025**).
+- Carta final: `Output/albert_da_silva_relatorio_abr25.pdf` (2 páginas, datada de **12/05/2025**).
 
 ## Início rápido (3 passos)
 
@@ -50,7 +52,7 @@ Outros atalhos (rode `make help` para ver todos):
 ```bash
 make batch     # gera uma carta por cliente em data/*.json (Albert + Beatriz)
 make ingest    # demonstra a ingestão do extrato real + reconciliação
-make test      # roda os 42 testes
+make test      # roda os 73 testes
 make clean     # remove artefatos gerados
 ```
 
@@ -86,11 +88,11 @@ node --env-file=.env rivet_runner/run_graph.mjs   # roda o grafo com Claude
 ```
 
 Validado por execução real: o grafo carrega, resolve os nós `chatAnthropic`, lê o
-`facts.json` e chama a API — bastando uma `ANTHROPIC_API_KEY` válida no `.env`.
+`facts.json` e chama a API, bastando uma `ANTHROPIC_API_KEY` válida no `.env`.
 
 Correções do v1 embutidas no grafo: sem caminhos `C:\Users\...`; macro restrito à fonte;
-cliente parametrizado (Albert, não "João"); nós **Anthropic Claude (`claude-sonnet-4-6`, o
-modelo validado com a chave da conta)** com prompts **grounded** no `facts.json` (em vez de
+cliente parametrizado (Albert, não "João"); nós **Anthropic Claude (`claude-opus-4-8`, o
+Opus mais potente, validado com a chave da conta)** com prompts **grounded** no `facts.json` (em vez de
 texto cru a temp 0,5). O logo do header usa
 `../01_Insumos_do_case/XP_Investimentos_logo.png`.
 
@@ -99,7 +101,8 @@ texto cru a temp 0,5). O logo do header usa
 Visão do repositório (a raiz guarda os entregáveis; o código vive em `02_Projeto/`):
 
 ```
-Carta_Final_Cliente_Albert.pdf   # carta pronta (entregável)
+Carta_Final_Cliente_Albert.pdf   # carta pronta do Albert (entregável)
+Carta_Final_Cliente_Beatriz_Sintetica.pdf  # 2º cliente, sintético (prova de escala)
 COMO_RODAR.md · REPORT.md        # guia de execução + resumo do case
 01_Insumos_do_case/              # extrato, macro, perfil, CSV de preços, logo, briefing
 03_Rivet/                        # grafo v2 (corrigido) + backup do v1
@@ -118,7 +121,8 @@ COMO_RODAR.md · REPORT.md        # guia de execução + resumo do case
     llm.py / narrate.py # Claude + fallback determinístico (perfil-aware)
     render.py        # PDF de 2 páginas (reportlab)
     run.py           # CLI: cliente único ou --all (lote)
-    tests/           # 42 testes (inclui multi-cliente/perfil e ingestão)
+    cvm.py           # cota real do fundo na CVM por CNPJ (real-first; proxy fallback)
+    tests/           # 73 testes (multi-cliente/perfil, ingestão e cota real CVM)
   data/              # 1 JSON por cliente (Albert + Beatriz demo); mesmo schema
   Output/            # cartas geradas
   rivet_runner/      # runner Node headless do grafo Rivet
@@ -130,7 +134,7 @@ COMO_RODAR.md · REPORT.md        # guia de execução + resumo do case
 **Por que os cálculos não estão no grafo Rivet.** Por decisão de arquitetura, o Rivet é só a
 camada de **narração**: ele lê o `build/facts.json` e escreve a carta. Toda a matemática
 (rentabilidade, recomendações, render do PDF) vive no pacote Python `engine/`, porque LLM
-inventa número — separar cálculo de narração é o que mata a alucinação da v1. Logo, **o
+inventa número, separar cálculo de narração é o que mata a alucinação da v1. Logo, **o
 entregável do case é o projeto inteiro**, não apenas o `.rivet-project`:
 
 ```
@@ -188,12 +192,12 @@ Beatriz → 2º cliente já estruturado         ──────────�
 | Alocação atual | 19,3 / 67,7 / 13,0 (Ações/Fundos/RF) | 37,5 / 30,7 / 31,8 |
 | Alvo do perfil | 10 / 30 / 60 (cap 5%/ativo) | 25 / 35 / 40 (cap 8%) |
 | Recomendações | caixa ocioso, reduzir fundos voláteis (>15%), sair de ARZZ3/HAPV3, aparar LREN3 | rebalancear Ações→RF, aparar ABEV3/ITUB4/VALE3 (>8%), tilt dividendos |
-| Carta | `Output/albert_da_silva_relatorio_mensal.pdf` | `Output/beatriz_almeida_relatorio_mensal.pdf` |
+| Carta | `Output/albert_da_silva_relatorio_abr25.pdf` | `Output/beatriz_almeida_relatorio_abr25.pdf` |
 
 O que muda é só o **dado** (o JSON do cliente). As análises se adaptam sozinhas ao perfil; uma
 base com milhares de clientes é o mesmo `--all` sobre `data/*.json`. Beatriz é um cliente
 **sintético** (marcado no JSON) incluído como prova de escala; o Albert exercita o fluxo
 completo a partir do extrato real.
 
-*Identidade visual XP com logo oficial no cabeçalho. Material informativo —
+*Identidade visual XP com logo oficial no cabeçalho. Material informativo;
 rentabilidade passada não garante resultados futuros.*

@@ -3,7 +3,7 @@
 Sources of truth:
   - data/albert_portfolio.json  -> holdings, allocations, totals (transcribed
     from the XP portfolio statement; a production system would extract this from
-    the PDF via OCR/LLM — see REPORT.md roadmap).
+    the PDF via OCR/LLM, see REPORT.md roadmap).
   - Input/profitability_calc_wip.csv -> per-stock current and last-month prices
     (THE source of truth for monthly stock returns).
 """
@@ -26,6 +26,7 @@ class Position:
     ticker: Optional[str] = None
     since_inception_return_pct: Optional[float] = None
     fund_category: Optional[str] = None
+    cnpj: Optional[str] = None        # fund CNPJ -> enables real CVM quote (real-first)
     # stock prices merged from the CSV
     current_price: Optional[float] = None
     last_month_price: Optional[float] = None
@@ -103,6 +104,7 @@ def load_client(portfolio_json=config.PORTFOLIO_JSON) -> ClientModel:
             ticker=raw.get("ticker"),
             since_inception_return_pct=raw.get("since_inception_return_pct"),
             fund_category=raw.get("fund_category"),
+            cnpj=raw.get("cnpj"),
             index=raw.get("index"),
             spread_pct=raw.get("spread_pct"),
             raw=raw,

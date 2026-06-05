@@ -163,7 +163,7 @@ def analyze(model: ClientModel, prof: ProfitabilityResult,
                 headline=f"Manter o nucleo de {p.ticker}, apenas ajustando tamanho",
                 rationale=(
                     f"{p.ticker} acumula {sir:.1f}% desde a compra, mas e uma empresa "
-                    f"consolidada e pagadora de dividendos — compativel com o perfil {prof_word}. "
+                    f"consolidada e pagadora de dividendos, compativel com o perfil {prof_word}. "
                     f"Tratamos a queda como desconto sobre um nucleo de qualidade: manter a "
                     f"posicao e apenas calibrar o tamanho (ver concentracao)."),
                 tags=["deep-loss", "profile-fit", "hold-core"],

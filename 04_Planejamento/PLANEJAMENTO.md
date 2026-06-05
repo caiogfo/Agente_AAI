@@ -1,4 +1,4 @@
-# PLANEJAMENTO — AI Financial Advisor para clientes XP (case Enter)
+# PLANEJAMENTO, AI Financial Advisor para clientes XP (case Enter)
 
 > Documento de planejamento e documentação completa do material do case.
 > Autor da solução: Caio Gomes (case técnico Enter). Cliente tema: XP Investimentos.
@@ -7,13 +7,13 @@
 > `01_Insumos_do_case/` (citados abaixo pelo nome histórico "Input/..."); o código e os
 > dados em `02_Projeto/` (`engine/`, `data/`, `Output/`); os grafos em `03_Rivet/`; e este
 > planejamento em `04_Planejamento/`. Os caminhos relativos no texto abaixo descrevem a
-> lógica do pipeline — para rodar, ver `COMO_RODAR.md` na raiz.
+> lógica do pipeline, para rodar, ver `COMO_RODAR.md` na raiz.
 
 ---
 
 ## 1. Objetivo do case (o que o cliente realmente pediu)
 
-Fonte: `README.md.docx`. A XP tem 20k+ assessores; cada um atende 50–300 clientes e
+Fonte: `README.md.docx`. A XP tem 20k+ assessores; cada um atende 50 a 300 clientes e
 tem dificuldade de entregar aconselhamento de qualidade ao segmento **middle-market**
 (< R$1M). O pedido é um **PoC de workflow de LLM** que permita ao assessor atender
 **3x mais** clientes, gerando um **relatório mensal (carta, em português)** que explique:
@@ -25,7 +25,7 @@ tem dificuldade de entregar aconselhamento de qualidade ao segmento **middle-mar
 
 Já existe um **MVP v1** (grafo Rivet + `Output/output_letter.docx`) que **não atende**
 ao padrão de qualidade. A tarefa é diagnosticar, iterar e elevar o nível, escolhendo ao
-menos uma das áreas de melhoria — aqui **combinamos as três**: (1) cálculo de
+menos uma das áreas de melhoria, aqui **combinamos as três**: (1) cálculo de
 rentabilidade, (2) lógica de compra/venda, (3) formatação automatizada.
 
 **Restrições do case:** relatório de até 2 páginas; prompts/código/grafo em inglês;
@@ -59,23 +59,23 @@ carta final em português, em formato de carta.
 ## 3. Diagnóstico do v1 (problemas encontrados)
 
 1. **Caminhos hardcoded** `C:\Users\blope\Downloads\...` → o grafo não roda em outra máquina.
-2. **Sem cálculo de rentabilidade real** — o CSV de preços **nem está conectado** ao grafo;
+2. **Sem cálculo de rentabilidade real**, o CSV de preços **nem está conectado** ao grafo;
    o "3,5%" da carta v1 é **inventado**.
-3. **Macro alucinado** — a carta v1 diz Selic ~9%, "Fed corta em julho", câmbio R$4,70.
+3. **Macro alucinado**, a carta v1 diz Selic ~9%, "Fed corta em julho", câmbio R$4,70.
    A fonte XP diz **Selic 15,50%**, IPCA 6,1%/2025, **câmbio 6,20**, **sem** cortes do Fed.
-4. **Cliente errado** — carta endereçada a **"João"** (hardcoded), mas o cliente é **Albert**.
-5. **Sem módulo de compra/venda** — recomendações genéricas, não ligadas ao perfil moderado.
-6. **Sem formatação** — saída é texto cru, não uma carta de 2 páginas com identidade visual.
-7. **Mistura de horizontes** — retorno *desde o início* dos fundos tratado como se fosse mensal.
-   (Ex.: HAPV3 está **−74,6% desde a compra**, mas **+76,4% só no mês** — o v1 confundiria isso.)
-8. **Determinismo ausente** — todos os números saíam do LLM (temp 0,5) em vez de uma camada calculada.
+4. **Cliente errado**, carta endereçada a **"João"** (hardcoded), mas o cliente é **Albert**.
+5. **Sem módulo de compra/venda**, recomendações genéricas, não ligadas ao perfil moderado.
+6. **Sem formatação**, saída é texto cru, não uma carta de 2 páginas com identidade visual.
+7. **Mistura de horizontes**, retorno *desde o início* dos fundos tratado como se fosse mensal.
+   (Ex.: HAPV3 está **−74,6% desde a compra**, mas **+76,4% só no mês**, o v1 confundiria isso.)
+8. **Determinismo ausente**, todos os números saíam do LLM (temp 0,5) em vez de uma camada calculada.
 
 ---
 
 ## 4. Princípio central da arquitetura
 
 > **Separar CÁLCULO de NARRAÇÃO.** Uma camada Python determinística e **testada**
-> produz um **JSON de fatos**. O LLM **nunca inventa um número** — só narra os fatos.
+> produz um **JSON de fatos**. O LLM **nunca inventa um número**, só narra os fatos.
 > Isso elimina a alucinação (problemas #2, #3) na raiz.
 
 ```
@@ -113,17 +113,24 @@ Benchmarks reais (BCB + Yahoo, abr/2025): **CDI 1,06%**, **IPCA 0,43%**, **Ibove
 **−2,03%**. Por classe: **Ações −38,7%** (puxam para baixo), **Fundos +11,2%**, **Renda
 Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
 
-> **Dados dos fundos (decisão de honestidade).** A cota mensal exata de cada fundo "Advisory"
-> não é identificável com segurança na base da CVM (cada estratégia tem dezenas de classes;
-> ex.: Truxt Long Bias retorna 10 CNPJs, Riza Lotus e Trend Investback retornam 0). Cravar um
-> CNPJ errado geraria número falso atribuído a um fundo específico. Por isso estimamos cada
-> fundo pela **referência de mercado da sua estratégia** (CDI/Ibovespa), com dado real do mês,
-> sem nunca afirmar que algo "não foi fornecido".
+> **Dados dos fundos (real-first via CVM, com proxy de reserva).** A solução agora resolve o
+> retorno de cada fundo **buscando primeiro a cota oficial na base pública da CVM (informe
+> diário) por CNPJ** (em `engine/cvm.py`). Só quando o **CNPJ não está disponível** ou o fundo não
+> é encontrado é que caímos na **estimativa pela referência de estratégia** (CDI/Ibovespa). O
+> motivo de ainda usarmos proxy nos fundos do Albert é factual: as classes "Advisory" do extrato
+> não trazem CNPJ e não são identificáveis com segurança no cadastro (cada estratégia tem dezenas
+> de classes; ex.: Truxt Long Bias retorna 10 CNPJs, Riza Lotus e Trend Investback retornam 0).
+> Cravar um CNPJ errado geraria número falso atribuído a um fundo específico, exatamente a
+> alucinação que este projeto elimina. O pipeline **sempre checa se o CNPJ existe** antes de
+> decidir (`cvm.has_cnpj`) e marca cada fundo como `cvm` (apurado) ou `proxy` (estimado) nos
+> facts. **Por que isso importa:** em abril/2025, fundos reais na base da CVM foram de **−8,7%**
+> a **+13,6%** no mês, contra um CDI de **+1,06%**. Ou seja, o proxy pode errar a casa por mais
+> de 12 pontos num único fundo. Daí a ordem real-primeiro.
 
 > **Disclaimer de janela (também impresso na carta).** Os preços das ações refletem o
 > **extrato de 07/05/2025**; os indicadores de mercado (CDI, IPCA, Ibovespa, S&P 500) usam o
 > **fechamento do mês de referência**. Por isso as janelas de comparação podem diferir
-> ligeiramente — optamos por usar os fechamentos disponíveis em vez do dia específico, com
+> ligeiramente, optamos por usar os fechamentos disponíveis em vez do dia específico, com
 > esta ressalva explícita na documentação e no relatório do cliente.
 
 ---
@@ -137,12 +144,15 @@ Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
 - [x] **4.** Identidade XP (`engine/brand.py`) + gráficos (`charts.py`) + PDF (`render.py`, reportlab).
 - [x] **5.** Camada LLM Anthropic (`llm.py` + `narrate.py`) com narração ancorada + fallback.
 - [x] **6.** Grafo Rivet corrigido e completo (Anthropic, facts JSON, sem caminhos hardcoded).
-- [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(42 testes ok)**
+- [x] **7.** CLI (`run.py`), carta final do Albert (PDF), `REPORT.md`, `README.md`. **(73 testes ok)**
 
 ## 6.1. Ajustes solicitados (rodadas seguintes)
 - **Provider:** validado com chave real. Tanto a narração Python quanto o **grafo Rivet usam
-  `claude-sonnet-4-6`** — o modelo confirmado como disponível para a chave da conta (a mesma
-  chave do `.env` roda o pipeline e o Rivet sem ajuste). Código provider-flexível (OpenAI também).
+  `claude-opus-4-8`** (o Opus mais potente), confirmado como disponível para a chave da conta. O
+  Opus 4.8 deprecou `temperature`/`top_p`: o motor Python omite esses parâmetros nesse modelo, e
+  o nó Anthropic do Rivet (que sempre os envia) recebe um patch idempotente em `rivet_runner`
+  (`patch-anthropic-opus.mjs`, ligado no `postinstall`), então a mesma chave roda o pipeline e o
+  Rivet. Código provider-flexível (OpenAI também).
 - **Perfil conservador:** alocação-alvo 10/30/60 (Ações/Fundos/RF), guardrails mais
   apertados, regra de redução de fundos voláteis. Documentado em `config.POLICY`.
 - **Fundos sem "não fornecido":** estimativa por estratégia (CDI/Ibovespa), nunca citando
@@ -165,7 +175,7 @@ Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
   trocado por um enquadramento institucional ("Encaminhamos o relatório de acompanhamento...").
   Ajustados o `SYSTEM_PROMPT` (registro formal) e o fallback determinístico. Removida saudação
   duplicada ("Prezado Albert," que aparecia 2x) e dateline duplicado no corpo.
-- **Análise adicional — custo do caixa ocioso:** quantifica quanto o caixa parado deixa de
+- **Análise adicional, custo do caixa ocioso:** quantifica quanto o caixa parado deixa de
   render ao CDI do mês (`cash_monthly_carry_brl` ≈ R$ 791,53/mês; ~R$ 10 mil/ano), ancorando a
   recomendação nº 1 (alocar o caixa) com impacto financeiro concreto.
 - **Data de emissão (anti-anacronismo):** a carta agora traz um dateline ("São Paulo,
@@ -174,7 +184,7 @@ Fixa +34,9%**. É o contraste que sustenta a virada conservadora.
   sobre o extrato de **07/05/2025**, logo é enviado em **maio/2025**.
 
 ## 6.3. Como o material é entregue (arquitetura × Rivet)
-> **O grafo Rivet sozinho NÃO contém os cálculos — isso é intencional.** O Rivet é a camada de
+> **O grafo Rivet sozinho NÃO contém os cálculos, isso é intencional.** O Rivet é a camada de
 > **narração**: ele lê o `build/facts.json` (produzido pelo motor Python) e escreve a carta. Os
 > cálculos de rentabilidade, recomendação e formatação vivem no pacote `engine/` (Python), porque
 > número de LLM aluciná. A entrega do case é o **projeto inteiro** (engine + Rivet + dados + docs),
@@ -209,7 +219,7 @@ cada cliente terá o mesmo conjunto de arquivos de input. Implementado:
   e rating ficam para a etapa de enriquecimento (explícita), não para a extração.
 - **Validação:** golden test (`tests/test_ingest.py`) garante que o extrato correto reconcilia e
   que qualquer número adulterado é rejeitado; a extração ao vivo reproduz o JSON do Albert.
-- **Total de testes: 42.**
+- **Total de testes: 73.**
 
 ## 6.6. Legibilidade dos nomes de ativos (escalável)
 Nomes longos de fundo poluíam a carta. Solução **genérica** (regra, não de-para por fundo, então
@@ -219,6 +229,44 @@ Advisory FIC FIRF REF DI CP" → "Riza Lotus Plus"; "CDB BANCO C6 CONSIGNADO S.A
 "CDB Banco C6". Cada leg ganha `short_name` nos facts. A narração foi instruída a **agrupar fundos
 por estratégia** (CDI vs Ibovespa) e citar só 1-2 destaques, em vez de listar todos. O humanizador
 ainda troca jargão em inglês que vaza (ex.: "sleeve" → "parcela"). Travado por teste.
+
+## 6.7. Cota real do fundo na CVM por CNPJ (real-first; proxy só de reserva)
+Fundos podem divergir muito de qualquer benchmark, então estimar todos por CDI/Ibovespa atribui
+número errado a um produto específico. O refino inverte a ordem: **apurar primeiro a cota oficial,
+estimar só se não der.** Implementado em `engine/cvm.py`.
+- **Fonte:** base pública da CVM, *informe diário* (`inf_diario_fi_AAAAMM.zip`), colunas
+  `CNPJ_FUNDO_CLASSE` (legado `CNPJ_FUNDO`), `DT_COMPTC`, `VL_QUOTA`. Sem chave, sem cadastro pago.
+- **Cálculo apurado:** retorno do mês = `cota(último dia útil do mês) / cota(último dia útil do mês
+  anterior) − 1`. Validado contra os dados reais de abr/2025 (ex.: fundo `28.047.174/0001-29`
+  passou de 13,444799 em 31/03 para 12,274216 em 30/04 = **−8,707%**).
+- **Sempre valida o dado primeiro:** `cvm.has_cnpj()`/`normalize_cnpj()` (14 dígitos) é o **gate**.
+  Sem CNPJ válido no extrato → nem toca a rede, vai direto para o proxy. Com CNPJ → busca a cota.
+- **Encadeamento no motor:** `profitability.compute(..., fund_return_resolver=cvm.resolver())`.
+  Cada fundo recebe `data_source` = `cvm` (apurado, `is_estimate=False`) ou `proxy` (estimado), e
+  os facts trazem `performance.funds_coverage` = `{total, with_cnpj, via_cvm, proxied}`. Compatível
+  para trás: sem resolver, tudo vira proxy (comportamento antigo, testado).
+- **Robustez/offline:** cache em `build/cvm_cache.json` + *fallback* documentado com valor real;
+  qualquer falha de rede degrada para o proxy, sem quebrar o pipeline (mesmo padrão do BCB/Yahoo).
+- **Honestidade mantida:** os fundos "Advisory" do Albert não trazem CNPJ → seguem como `proxy`,
+  agora **explicitamente** (`basis` diz "sem CNPJ no extrato"). O número final do Albert não muda;
+  o que muda é a arquitetura: a porta de entrada passa a ser o dado real.
+- **Testes:** `tests/test_cvm.py` (gate de CNPJ, parsing do informe, cálculo do retorno, fallback
+  de rede e o encadeamento real-vs-proxy no motor), todos offline (rede mockada).
+
+## 6.8. Mês reportado parametrizável
+O mês/ano do relatório deixou de ser cravado no código: virou um parâmetro único do qual derivam o
+rótulo da carta, o sufixo do arquivo, a janela dos indicadores e as datas do documento.
+- **Como definir:** `python -m engine.run --month AAAA-MM` ou a variável de shell `REPORT_MONTH`
+  (ex.: `REPORT_MONTH=2025-05 make run`). O `--month` é pré-lido em `run.py` **antes** de importar
+  `config`, então o valor flui para todos os defaults derivados de `config.REFERENCE_MONTH`.
+- **Fonte única (`config.py`):** `parse_report_month()` (default `2025-04`, o mês do case),
+  `month_label_pt()` ("maio de 2025"), `month_slug()` ("mai25") e as datas derivadas
+  `snapshot_date_for()`/`issue_date_for()` (extrato no início do mês seguinte, carta poucos dias
+  depois). O padrão **reproduz o case exatamente** (abril/2025 → extrato 07/05, emissão 12/05/2025).
+- **Honestidade:** o mês do case roda offline (fallbacks documentados de CDI/IPCA/Ibov para
+  2025-04); outros meses buscam os indicadores ao vivo (BCB/Yahoo). Os preços das ações vêm do CSV
+  do case, então trocar só o mês não reescreve o histórico das ações; em produção cada mês traz seu
+  próprio extrato. Travado por `tests/test_report_month.py`.
 
 ## 7. Homologação
 - `pytest -q` (todos os cálculos batem com valores conferidos à mão).

@@ -16,6 +16,41 @@ from . import config, llm
 
 SECTIONS = ["greeting", "performance", "macro", "recommendations", "closing"]
 
+
+def _funds_basis(facts: dict) -> dict:
+    """How the month's fund returns were obtained, from the actual data source.
+
+    The speech must tell the truth for THIS client: 'apurado' (measured) when the
+    real CVM quote was used (the fund carried a CNPJ), 'estimado' when it fell back
+    to the strategy proxy. Driven by performance.funds_coverage so the wording flips
+    automatically the day a fund brings a CNPJ and we pull the official CVM quota.
+    """
+    cov = (facts.get("performance", {}) or {}).get("funds_coverage", {}) or {}
+    total, cvm, prox = cov.get("total", 0), cov.get("via_cvm", 0), cov.get("proxied", 0)
+    if total and cvm and not prox:                      # every fund priced from CVM
+        return {
+            "real": True,
+            "pt": "apurados pela cota oficial de cada fundo na CVM (informe diario)",
+            "en": ("MEASURED from each fund's official CVM quota (the daily 'informe "
+                   "diario'); do NOT call the fund returns estimates"),
+        }
+    if total and cvm and prox:                          # mixed
+        return {
+            "real": True,
+            "pt": ("apurados pela cota oficial da CVM onde ha CNPJ e estimados pela "
+                   "referencia de mercado da estrategia nos demais"),
+            "en": ("MEASURED from the official CVM quota where a CNPJ is available and "
+                   "ESTIMATED by the strategy's market benchmark (CDI/Ibovespa) for the rest"),
+        }
+    return {                                             # all proxied (today's case)
+        "real": False,
+        "pt": ("estimados pela referencia de mercado de cada estrategia (CDI para os "
+               "pos-fixados, Ibovespa para os de acoes)"),
+        "en": ("ESTIMATED by each strategy's market benchmark (CDI for post-fixed/"
+               "multimarket, Ibovespa for equity/long-biased); never say data was "
+               "'missing' or 'not provided'"),
+    }
+
 # The advisor "voice" distilled from advisor-high-level-habilities.pdf and
 # what-makes-a-good-advisor.pdf: empathetic, clear, proactive, trustworthy.
 # Built per client so the letter adapts to whoever it is addressed to and to
@@ -23,6 +58,7 @@ SECTIONS = ["greeting", "performance", "macro", "recommendations", "closing"]
 def _system_prompt(facts: dict) -> str:
     name = facts["client"]["first_name"]
     profile = facts["client"]["risk_profile"]          # Conservador/Moderado/Agressivo
+    funds_en = _funds_basis(facts)["en"]
     tilt = {
         "Conservador": "protecting capital, reducing exposure to volatility, "
                        "privileging fixed income and safe post-fixed funds",
@@ -58,9 +94,10 @@ ABSOLUTE RULES:
 invent or alter a number, name, date or macro figure.
 - Attribute macro figures to XP (e.g., the BRL 6.20/USD year-end FX is XP's own \
 projection, not a guess).
-- For funds, present the month's return as ESTIMATED BY EACH STRATEGY'S MARKET \
-BENCHMARK (CDI for post-fixed/multimarket, Ibovespa for equity/long-biased). \
-NEVER say data was "missing" or "not provided".
+- For funds, present the month's return as {funds_en}. Match this to the facts: \
+each fund leg carries `data_source` ("cvm" = measured, "proxy" = estimated) and \
+`is_estimate`; never describe a measured (CVM) fund as an estimate, nor an estimated \
+one as measured.
 - READABILITY: refer to any holding by its `short_name` field, never the full legal \
 name (no "FIC FIM", "Advisory", "S.A."). Do NOT enumerate every fund one by one; \
 describe them by strategy GROUP (the post-fixed/multimarket sleeve tied to CDI, the \
@@ -83,10 +120,11 @@ line, and output nothing else: @@GREETING@@ (~2 sentences), @@PERFORMANCE@@ (~5-
 def _user_prompt(facts: dict) -> str:
     name = facts["client"]["first_name"]
     profile = facts["client"]["risk_profile"].lower()
+    funds_pt = _funds_basis(facts)["pt"]
     return (
         f"Write the five paragraphs from these FACTS for the client {name} "
         f"({profile} profile). Cover: the month's measured equity result and the "
-        "strategy-benchmark estimates for funds; the ACCUMULATED result since the "
+        f"funds priced as {funds_pt}; the ACCUMULATED result since the "
         "contributions (facts.accumulated); the macro backdrop (high Selic, pressured "
         "inflation, XP's BRL 6.20 FX projection); and the recommendations in facts."
         "recommendations, which move the portfolio toward the target allocation for "
@@ -124,6 +162,8 @@ def _fallback(facts: dict) -> dict:
     month = facts["meta"]["reference_month_label"]
     prof_word = c.get("risk_profile", "Conservador").lower()
     best, worst = p["highlight_best"], p["highlight_worst"]
+    fb = _funds_basis(facts)                       # 'apurado' (CVM) vs 'estimado' (proxy)
+    total_word = "estimado de" if p.get("total_is_estimate", True) else "de"
 
     def _p(v):
         return f"{v:+.2f}%".replace(".", ",")
@@ -162,9 +202,8 @@ def _fallback(facts: dict) -> dict:
         f"{_p(p['equities_return_pct'])}, com destaque para {best['ticker']} "
         f"({_p(best['monthly_return_pct'])}) e o resultado negativo de {worst['ticker']} "
         f"({_p(worst['monthly_return_pct'])}). A renda fixa avancou "
-        f"{_p(p['fixed_income_return_pct'])}, e os fundos foram estimados pela referencia de "
-        f"mercado de cada estrategia (CDI para os pos-fixados, Ibovespa para os de acoes). "
-        f"Com isso, a carteira teve retorno estimado de {_p(p['total_return_pct'])} no mes, "
+        f"{_p(p['fixed_income_return_pct'])}, e os fundos foram {fb['pt']}. "
+        f"Com isso, a carteira teve retorno {total_word} {_p(p['total_return_pct'])} no mes, "
         f"acima do CDI em {_pp(p['excess_cdi_pp'])} ponto(s) percentual(is) e "
         f"{_p(p['real_return_pct'])} acima da inflacao. Olhando o acumulado desde os seus "
         f"aportes, o resultado e de "

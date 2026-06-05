@@ -1,4 +1,4 @@
-# Relatório do Desafio — AI Financial Advisor (Enter / XP)
+# Relatório do Desafio, AI Financial Advisor (Enter / XP)
 
 *Caio Gomes · case técnico Enter. Resumo de 2 páginas: o que estava errado na v1, como
 resolvi e o que faria com mais tempo.*
@@ -36,9 +36,22 @@ ações, 30% em fundos e 60% em renda fixa.
 Combinei as três frentes sugeridas pelo case.
 
 Na **rentabilidade**, apuro o retorno mensal das ações pelos preços do extrato e o da
-renda fixa pelo IPCA real do mês somado ao spread contratual. Os fundos são estimados
-pela referência de mercado de cada estratégia, CDI para os pós-fixados e multimercado,
-Ibovespa para os de ações. O resultado do mês ficou em torno de +2,58%, acima do CDI.
+renda fixa pelo IPCA real do mês somado ao spread contratual. Nos **fundos**, dei o passo
+que mais aproxima o número da realidade: a solução agora busca **primeiro a cota oficial de
+cada fundo na base pública da CVM** (o *informe diário*, por CNPJ) e calcula o retorno real
+do mês cota a cota; a estimativa por estratégia (CDI/Ibovespa) virou apenas a **rede de
+segurança**, usada só quando o CNPJ não está no extrato ou o fundo não é encontrado. A ordem
+importa porque fundo não anda colado a benchmark: em abril de 2025, fundos reais na base da
+CVM foram de **−8,7% a +13,6%** no mês, contra um CDI de **+1,06%**. Pingar tudo no CDI
+erraria a casa em mais de doze pontos num único produto, e atribuiria esse erro a um fundo com
+nome e sobrenome. O pipeline **sempre confere se tem o CNPJ** antes de decidir e marca cada
+fundo como apurado (CVM) ou estimado nos próprios fatos, então o assessor enxerga a procedência
+de cada linha. A própria carta acompanha a origem: diz "apurado pela cota da CVM" quando o dado é
+real e "estimado pela referência da estratégia" quando é proxy, sem prometer um dado que não temos.
+Nos fundos do Albert, as classes "Advisory" do extrato não trazem CNPJ, então
+eles seguem, com honestidade, na estimativa. A diferença é que a porta de entrada do cálculo
+passou a ser o dado real, e basta o CNPJ chegar para o número virar apurado, sem tocar no código.
+O resultado do mês ficou em torno de +2,58%, acima do CDI.
 Mais importante para um perfil conservador, trouxe a leitura acumulada desde os aportes,
 que está em -2,03%. As ações puxam para baixo (-38,7%), enquanto a renda fixa (+34,9%) e
 os fundos (+11,2%) seguram o patrimônio. Esse contraste é o que sustenta a tese de
@@ -60,7 +73,9 @@ Na **formatação**, a carta sai em PDF de duas páginas, com o logo da XP no ca
 data de emissão, indicadores, gráficos e cartões de recomendação, gerada por código e
 modular por assessor e por cliente, pronta para escalar. A data segue a linha do tempo do
 case (12 de maio de 2025, poucos dias após o extrato de 07/05), e não o relógio da máquina,
-para a carta nunca sair com um ano anacrônico. Para a leitura ficar limpa, nomes longos de
+para a carta nunca sair com um ano anacrônico. O mês reportado é um parâmetro (`--month AAAA-MM`):
+dele saem o rótulo da carta, o sufixo do arquivo (`abr25`), a janela dos indicadores e as datas do
+documento, então o mesmo motor serve qualquer competência sem tocar no código. Para a leitura ficar limpa, nomes longos de
 fundo são encurtados por uma regra genérica (sem de-para por ativo, então escala) e a narração
 agrupa os fundos por estratégia em vez de listar todos.
 
@@ -80,17 +95,21 @@ sua fatia do investido). Se algo não bate, o registro é rejeitado para revisã
 silêncio. Validei contra o extrato real do Albert, que reconcilia e reproduz a transcrição feita
 à mão.
 
-A garantia de qualidade vem de 42 testes em pytest, com a aritmética conferida à mão até
+A garantia de qualidade vem de 73 testes em pytest, com a aritmética conferida à mão até
 o centavo. Há testes que travam regressões clássicas, como o nome do cliente, a coerência
 do macro com a fonte, a ausência de caminhos de Windows no grafo e a reconciliação da ingestão
 (o extrato correto passa, qualquer número adulterado é rejeitado).
 
 ## 3. O que eu faria com um mês inteiro
 
-O passo mais valioso seria buscar a cota diária real de cada fundo na base da CVM e
-casá-la por CNPJ, eliminando a única estimativa que ainda existe no retorno total. Na
-ingestão, evoluiria do texto já extraído para o PDF nativo com OCR e validaria mais formatos de
-extrato (cada banco tem o seu), sempre com a mesma reconciliação como rede de segurança.
+A integração com a cota real da CVM por CNPJ, antes o passo mais valioso da lista, já está
+**construída e testada** (real-primeiro, com o proxy só de reserva). O que falta para fechar a
+última estimativa nos fundos do Albert é a **resolução confiável de CNPJ** das classes "Advisory"
+que o extrato não traz: um casamento por nome contra o cadastro da CVM com checagem de
+administrador e gestor, aceitando só correspondência inequívoca e caindo no proxy quando houver
+ambiguidade, para nunca cravar um CNPJ errado. Na ingestão, evoluiria do texto já extraído para o
+PDF nativo com OCR e validaria mais formatos de extrato (cada banco tem o seu), sempre com a mesma
+reconciliação como rede de segurança.
 
 Montaria também um harness de avaliação com captura de feedback do assessor. Toda carta
 passaria por checagens automáticas, como verificar se cada número existe no `facts.json`,
@@ -100,7 +119,7 @@ re-treino de modelo. Por fim, acrescentaria projeções de cenários para o patr
 sempre rotuladas como premissas, e testes A/B de NPS por estilo de carta.
 
 ---
-*Stack: Python (pandas, matplotlib, reportlab), BCB e Yahoo Finance, Anthropic Claude no
-Rivet. Como rodar: ver `COMO_RODAR.md` na raiz (resumo: `cd 02_Projeto && make setup &&
-make run`). Organização: insumos do case em `01_Insumos_do_case/`, projeto em
+*Stack: Python (pandas, matplotlib, reportlab), BCB, Yahoo Finance e CVM (informe diário), Anthropic
+Claude (Opus 4.8) no motor e no grafo Rivet. Como rodar: ver `COMO_RODAR.md` na raiz (resumo:
+`cd 02_Projeto && make setup && make run`). Organização: insumos do case em `01_Insumos_do_case/`, projeto em
 `02_Projeto/`, grafos em `03_Rivet/`.*

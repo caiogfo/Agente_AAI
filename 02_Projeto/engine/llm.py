@@ -1,8 +1,10 @@
 """Thin, provider-flexible LLM interface.
 
-Default provider is OpenAI (gpt-4o-mini, per the case decision); Anthropic Claude
-is also supported. The key is read from the environment — never hardcoded. A
-local .env file (gitignored) is loaded automatically if present.
+The delivered configuration uses Anthropic Claude (claude-opus-4-8, the most
+powerful Opus, validated with the account key and wired in .env.example); OpenAI
+(gpt-4o-mini) is also supported and takes over when OPENAI_API_KEY is set. The key
+is read from the environment, never hardcoded. A local .env file (gitignored)
+loads automatically if present.
 
 The rest of the engine is fully functional with NO key (deterministic fallback in
 narrate.py); the LLM only adds narrative polish on top of the grounded facts.
@@ -16,7 +18,7 @@ _ENV = Path(__file__).resolve().parent.parent / ".env"
 
 
 def _load_dotenv() -> None:
-    """Minimal .env loader (KEY=VALUE per line) — no external dependency."""
+    """Minimal .env loader (KEY=VALUE per line), no external dependency."""
     if not _ENV.exists():
         return
     for line in _ENV.read_text().splitlines():
@@ -30,7 +32,7 @@ def _load_dotenv() -> None:
 _load_dotenv()
 
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-4-8")
 
 
 def provider() -> str | None:
@@ -66,13 +68,14 @@ def complete(system: str, user: str, *, model: str | None = None,
         import anthropic
 
         client = anthropic.Anthropic()
-        msg = client.messages.create(
-            model=model or ANTHROPIC_MODEL,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-        )
+        mdl = model or ANTHROPIC_MODEL
+        kwargs = dict(model=mdl, max_tokens=max_tokens, system=system,
+                      messages=[{"role": "user", "content": user}])
+        # Newer Anthropic models (e.g. Opus 4.8) deprecate `temperature`; only send
+        # it to models that still accept it, so the call works across model versions.
+        if "opus-4-8" not in mdl:
+            kwargs["temperature"] = temperature
+        msg = client.messages.create(**kwargs)
         return "".join(b.text for b in msg.content if b.type == "text")
 
     raise RuntimeError("No LLM API key set (OPENAI_API_KEY or ANTHROPIC_API_KEY).")

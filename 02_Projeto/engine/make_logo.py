@@ -1,7 +1,7 @@
 """Generate a house-style 'XP' wordmark PNG for the letter header.
 
-This is a generic, brand-styled placeholder (yellow square + 'XP' + 'investimentos')
-— NOT the official XP logo. Drop the official asset at assets/xp_logo.png to override
+This is a generic, brand-styled placeholder (yellow square + 'XP' + 'investimentos'),
+NOT the official XP logo. Drop the official asset at assets/xp_logo.png to override
 it; render.py uses that file automatically if present.
 """
 from __future__ import annotations

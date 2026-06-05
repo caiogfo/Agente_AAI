@@ -16,11 +16,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import sys
 import unicodedata
 from pathlib import Path
 
-from . import config, llm
+
+def _preset_report_month(argv: list[str]) -> None:
+    """Honor `--month YYYY-MM` by setting REPORT_MONTH BEFORE config is imported,
+    so the parameterized month flows into every config-derived default."""
+    for i, a in enumerate(argv):
+        if a == "--month" and i + 1 < len(argv):
+            os.environ["REPORT_MONTH"] = argv[i + 1]
+        elif a.startswith("--month="):
+            os.environ["REPORT_MONTH"] = a.split("=", 1)[1]
+
+
+_preset_report_month(sys.argv)
+
+from . import config, llm                       # noqa: E402  (after month pre-parse)
 from .charts import build_all
 from .data_loader import load_client
 from .facts import build_facts
@@ -29,25 +44,10 @@ from .narrate import build_narrative
 from .render import render_letter
 
 
-_PT_MONTH_ABBREV = {
-    "janeiro": "jan", "fevereiro": "fev", "março": "mar", "abril": "abr",
-    "maio": "mai", "junho": "jun", "julho": "jul", "agosto": "ago",
-    "setembro": "set", "outubro": "out", "novembro": "nov", "dezembro": "dez",
-}
-
-
 def _slug(name: str) -> str:
     """File-safe slug from a client name (e.g. 'Albert da Silva' -> 'albert_da_silva')."""
     norm = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]+", "_", norm.lower()).strip("_") or "cliente"
-
-
-def _month_slug(reference_month_label: str) -> str:
-    """'abril de 2025' -> 'abr25'"""
-    parts = reference_month_label.lower().split()  # ['abril', 'de', '2025']
-    month_abbrev = _PT_MONTH_ABBREV.get(parts[0], parts[0][:3])
-    year_short = parts[-1][-2:]
-    return f"{month_abbrev}{year_short}"
 
 
 def generate_one(portfolio_json: Path, use_llm: bool, emit_facts: bool = False,
@@ -72,7 +72,7 @@ def generate_one(portfolio_json: Path, use_llm: bool, emit_facts: bool = False,
 
     charts = build_all(facts, prefix=f"{slug}_")          # namespaced per client
     narrative = build_narrative(facts, use_llm=use_llm)
-    month = _month_slug(facts["meta"]["reference_month_label"])
+    month = config.REFERENCE_MONTH_SLUG                    # 'abr25' (parameterized)
     out = Path(out) if out else (config.OUTPUT_DIR / f"{slug}_relatorio_{month}.pdf")
     render_letter(facts, narrative, charts, out)
 
@@ -95,10 +95,16 @@ def main(argv=None) -> int:
     ap.add_argument("--emit-facts", action="store_true", help="write build/facts.json")
     ap.add_argument("--live", action="store_true", help="append live quote snapshot")
     ap.add_argument("--out", default=None, help="output PDF path (single-client only)")
+    ap.add_argument("--month", default=None, metavar="YYYY-MM",
+                    help="reported month (default: case month 2025-04). Also via REPORT_MONTH env. "
+                         "Drives the label, the file suffix (e.g. abr25), the benchmark window and "
+                         "the letter dates.")
     args = ap.parse_args(argv)
 
     use_llm = (not args.no_llm) and llm.have_key()
     label = (llm.provider() or "none") if use_llm else "deterministic fallback"
+    print(f"• Mês reportado: {config.REFERENCE_MONTH_LABEL_PT} "
+          f"(sufixo {config.REFERENCE_MONTH_SLUG}); emissão {config.ISSUE_DATE:%d/%m/%Y}")
 
     if args.all:
         portfolios = sorted(Path(args.clients_dir).glob("*.json"))

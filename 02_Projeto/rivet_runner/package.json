@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "version": "1.0.0",
+  "scripts": {
+    "postinstall": "node patch-anthropic-opus.mjs"
+  },
   "dependencies": {
     "@ironclad/rivet-node": "^1.25.0"
   }

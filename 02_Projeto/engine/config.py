@@ -10,6 +10,7 @@ data leaks into the historical return):
 from __future__ import annotations
 
 import datetime as dt
+import os
 from pathlib import Path
 
 # ----------------------------------------------------------------------------
@@ -33,18 +34,64 @@ RISK_PROFILE_TXT = INPUT_DIR / "XP - Albert_s risk profile.txt"
 MACRO_TXT = INPUT_DIR / "XP - Macro analysis.txt"
 
 # ----------------------------------------------------------------------------
-# Case anchoring
+# Case anchoring (the reported month is PARAMETERIZED)
 # ----------------------------------------------------------------------------
-SNAPSHOT_DATE = dt.date(2025, 5, 7)
-MACRO_DATE = dt.date(2025, 2, 6)
-# "Last month" = the month that closed right before the snapshot.
-REFERENCE_MONTH = dt.date(2025, 4, 1)   # April 2025
-REFERENCE_MONTH_LABEL_PT = "abril de 2025"
-# Letter issue date: a few business days after the statement (07/05/2025), when
-# the April report would actually be sent. Pinned to the case timeline on purpose
-# (NOT datetime.now()), so re-running the build never anachronistically stamps the
-# letter with the current year.
-ISSUE_DATE = dt.date(2025, 5, 12)
+# Portuguese month names, the single source of truth for labels and file suffixes.
+PT_MONTHS = {1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril", 5: "maio",
+             6: "junho", 7: "julho", 8: "agosto", 9: "setembro", 10: "outubro",
+             11: "novembro", 12: "dezembro"}
+PT_MONTHS_ABBREV = {1: "jan", 2: "fev", 3: "mar", 4: "abr", 5: "mai", 6: "jun",
+                    7: "jul", 8: "ago", 9: "set", 10: "out", 11: "nov", 12: "dez"}
+
+DEFAULT_REPORT_MONTH = "2025-04"        # the case month (April 2025)
+
+
+def month_label_pt(d: dt.date) -> str:
+    """date -> 'abril de 2025' (used in the letter and facts)."""
+    return f"{PT_MONTHS[d.month]} de {d.year}"
+
+
+def month_slug(d: dt.date) -> str:
+    """date -> 'abr25' (the output-file suffix)."""
+    return f"{PT_MONTHS_ABBREV[d.month]}{d.year % 100:02d}"
+
+
+def _first_of_next_month(d: dt.date) -> dt.date:
+    return (d.replace(day=28) + dt.timedelta(days=10)).replace(day=1)
+
+
+def snapshot_date_for(month: dt.date) -> dt.date:
+    """Statement snapshot: a few business days into the month after the reported one."""
+    return _first_of_next_month(month).replace(day=7)
+
+
+def issue_date_for(month: dt.date) -> dt.date:
+    """Letter issue date: a few days after the statement (never datetime.now())."""
+    return _first_of_next_month(month).replace(day=12)
+
+
+def parse_report_month(raw: str | None = None) -> dt.date:
+    """The reported month as a date (day 1). Parameterized via REPORT_MONTH=YYYY-MM
+    (env) or `python -m engine.run --month YYYY-MM`; defaults to the case month."""
+    raw = (raw if raw is not None else os.environ.get("REPORT_MONTH")) or DEFAULT_REPORT_MONTH
+    try:
+        y, m = str(raw).strip().split("-")[:2]
+        return dt.date(int(y), int(m), 1)
+    except Exception:
+        y, m = DEFAULT_REPORT_MONTH.split("-")
+        return dt.date(int(y), int(m), 1)
+
+
+# The reported month drives the label, the output-file suffix, the benchmark window
+# and the letter dates. Override with REPORT_MONTH=YYYY-MM (env) or `--month YYYY-MM`.
+# The default reproduces the case exactly (April 2025 -> 07/05 and 12/05/2025).
+REFERENCE_MONTH = parse_report_month()
+REFERENCE_MONTH_LABEL_PT = month_label_pt(REFERENCE_MONTH)
+REFERENCE_MONTH_SLUG = month_slug(REFERENCE_MONTH)
+
+MACRO_DATE = dt.date(2025, 2, 6)        # fixed: the XP macro report's own date
+SNAPSHOT_DATE = snapshot_date_for(REFERENCE_MONTH)
+ISSUE_DATE = issue_date_for(REFERENCE_MONTH)
 ISSUE_PLACE = "São Paulo"
 
 # ----------------------------------------------------------------------------
@@ -70,7 +117,7 @@ MACRO_FACTS = {
 }
 
 # ----------------------------------------------------------------------------
-# Risk-profile policy — drives the rule-based recommendation engine.
+# Risk-profile policy drives the rule-based recommendation engine.
 # Albert is treated with a CONSERVATIVE tilt (per advisor guidance): preserve
 # capital first, lower exposure to volatility (equities and risky funds), and
 # privilege fixed income and safe (post-fixed) funds in a high-Selic regime.
