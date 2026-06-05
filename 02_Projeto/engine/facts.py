@@ -1,4 +1,4 @@
-"""Build the grounded FACTS object — the single contract the narration consumes.
+"""Build the grounded FACTS object, the single contract the narration consumes.
 
 The LLM (and the Rivet graph) receive ONLY this object and must not introduce any
 number that is not present here. This is what kills the v1 hallucinations.
@@ -11,15 +11,11 @@ import re
 from dataclasses import asdict
 
 from . import config
+from . import cvm
 from .data_loader import ClientModel, load_client
 from .market_data import get_benchmarks
 from .profitability import ProfitabilityResult, compute
 from .recommendations import RecommendationSet, analyze
-
-
-_PT_MONTHS = {1: "janeiro", 2: "fevereiro", 3: "março", 4: "abril", 5: "maio",
-              6: "junho", 7: "julho", 8: "agosto", 9: "setembro", 10: "outubro",
-              11: "novembro", 12: "dezembro"}
 
 
 def _round(x, n=2):
@@ -64,8 +60,11 @@ def _short_name(name: str, asset_class: str = "") -> str:
 def build_facts(model: ClientModel | None = None) -> dict:
     model = model or load_client()
     bench = get_benchmarks()
+    # Funds resolve REAL-FIRST: the CVM resolver returns a measured quote when the position
+    # carries a CNPJ, else None (the engine then proxies). It always checks CNPJ availability.
     prof: ProfitabilityResult = compute(
-        model, bench["cdi_month_pct"], bench["ipca_month_pct"], bench["ibov_month_pct"])
+        model, bench["cdi_month_pct"], bench["ipca_month_pct"], bench["ibov_month_pct"],
+        fund_return_resolver=cvm.resolver())
     recs: RecommendationSet = analyze(model, prof)
 
     # allocation by class (% and BRL)
@@ -88,7 +87,7 @@ def build_facts(model: ClientModel | None = None) -> dict:
         "monthly_return_pct": _round(l.monthly_return_pct), "is_estimate": l.is_estimate,
         "contribution_pp": _round(l.contribution_pp, 3),
         "since_inception_return_pct": _round(l.since_inception_return_pct),
-        "basis": l.basis,
+        "basis": l.basis, "data_source": l.data_source, "has_cnpj": l.has_cnpj,
     } for l in prof.legs]
 
     facts = {
@@ -101,7 +100,7 @@ def build_facts(model: ClientModel | None = None) -> dict:
             "issue_date": config.ISSUE_DATE.isoformat(),
             "issue_dateline_pt": (
                 f"{config.ISSUE_PLACE}, {config.ISSUE_DATE.day} de "
-                f"{_PT_MONTHS[config.ISSUE_DATE.month]} de {config.ISSUE_DATE.year}"),
+                f"{config.PT_MONTHS[config.ISSUE_DATE.month]} de {config.ISSUE_DATE.year}"),
             "currency": "BRL",
             "language_letter": "pt-BR",
         },
@@ -140,6 +139,7 @@ def build_facts(model: ClientModel | None = None) -> dict:
             "real_return_pct": _round(prof.real_return_pct),
             "excess_cdi_pp": _round(prof.excess_cdi_pp),
             "covered_alloc_pct": _round(prof.covered_alloc_pct),
+            "funds_coverage": prof.funds_coverage,
             "legs": legs,
             "highlight_best": {"ticker": best.name, "monthly_return_pct": _round(best.monthly_return_pct)},
             "highlight_worst": {"ticker": worst.name, "monthly_return_pct": _round(worst.monthly_return_pct)},
@@ -177,9 +177,10 @@ def build_facts(model: ClientModel | None = None) -> dict:
         "methodology_notes": [
             "Acoes: retorno do mes = preco atual / preco do mes anterior (CSV fornecido).",
             "Renda Fixa: IPCA real do mes (BCB) capitalizado com o spread contratual (pro-rata).",
-            "Fundos: retorno do mes estimado pela referencia de mercado de cada estrategia "
-            "(CDI para pos-fixados/multimercado; Ibovespa para fundos de acoes/long-biased). "
-            "Retornos acumulados 'desde a compra' sao exibidos a parte.",
+            "Fundos: retorno do mes apurado pela COTA OFICIAL da CVM (informe diario) quando o "
+            "fundo tem CNPJ identificado; sem CNPJ, estima-se pela referencia de mercado da "
+            "estrategia (CDI para pos-fixados/multimercado; Ibovespa para acoes/long-biased), "
+            "sinalizado como estimativa. Retornos acumulados 'desde a compra' sao exibidos a parte.",
             "Acumulado: valor atual vs custo dos aportes (preco medio x quantidade nas acoes; "
             "valor aplicado nos fundos e na renda fixa).",
             "Benchmarks: CDI e IPCA do BCB (SGS); Ibovespa e S&P 500 do Yahoo Finance (mes-calendario).",

@@ -5,13 +5,14 @@ faz. Tempo total: ~5 minutos.
 
 > **Pré-requisitos:** Python 3.9+ e um terminal. A chave da Anthropic é **opcional**
 > para gerar a carta (há narração determinística de fallback), mas é **necessária para
-> rodar o grafo Rivet** — ela vem anexada no corpo do e-mail desta entrega.
+> rodar o grafo Rivet**, ela vem anexada no corpo do e-mail desta entrega.
 
 ## Estrutura das pastas
 
 ```
 .
-├── Carta_Final_Cliente_Albert.pdf   ← a carta pronta (entregável)
+├── Carta_Final_Cliente_Albert.pdf   ← carta pronta do Albert (entregável)
+├── Carta_Final_Cliente_Beatriz_Sintetica.pdf  ← 2º cliente, sintético (prova de escala)
 ├── COMO_RODAR.md                    ← este guia
 ├── REPORT.md                        ← resumo do case (2 páginas)
 ├── 01_Insumos_do_case/              ← arquivos originais do case (extrato, macro, perfil…)
@@ -62,25 +63,43 @@ O arquivo abrirá no TextEdit. Cole a chave no campo indicado:
 
 ```
 ANTHROPIC_API_KEY=cole-a-chave-aqui
-ANTHROPIC_MODEL=claude-sonnet-4-6      # já vem assim; é o modelo validado p/ esta chave
+ANTHROPIC_MODEL=claude-opus-4-8        # já vem assim; o Opus mais potente, validado p/ esta chave
 ```
 
 Salve (`Cmd + S`) e feche.
 
 > **Sem a chave a carta ainda sai:** a narração cai no modo determinístico. Números,
-> gráficos e layout ficam idênticos — só o texto deixa de ser escrito pelo Claude.
+> gráficos e layout ficam idênticos, só o texto deixa de ser escrito pelo Claude.
 
 ## 4. Gerar a carta
 
 ```bash
-make run        # gera a carta do cliente padrão (Albert) em 02_Projeto/Output/
+make run        # gera UMA carta (cliente padrão, Albert)
 ```
 
-Abra o PDF gerado:
+A carta sai em `02_Projeto/Output/`. Abra com:
 
 ```bash
 open Output/albert_da_silva_relatorio_abr25.pdf
 ```
+
+> **Onde as cartas aparecem (importante):** `make run` gera **uma só** carta, a do Albert,
+> em `02_Projeto/Output/albert_da_silva_relatorio_abr25.pdf`. Para gerar **as duas** (Albert
+> e Beatriz), use **`make batch`** (seção "Vários clientes" abaixo): elas saem juntas em
+> `02_Projeto/Output/`, como `albert_da_silva_relatorio_abr25.pdf` e
+> `beatriz_almeida_relatorio_abr25.pdf`. As cartas na **raiz** (`Carta_Final_Cliente_*.pdf`)
+> são o snapshot já pronto da entrega; rodar o projeto produz a versão datada em `Output/`.
+>
+> O nome do arquivo leva o **sufixo do mês/ano de referência** (`abr25` = abril/2025),
+> derivado automaticamente do período do relatório.
+>
+> **Mês parametrizável:** para reportar outro mês, use `--month AAAA-MM` (ou a variável
+> `REPORT_MONTH`). O mês escolhido define o rótulo da carta, o sufixo do arquivo, a janela dos
+> indicadores e as datas do documento. Ex.:
+> ```bash
+> ./.venv/bin/python -m engine.run --month 2025-05   # gera ..._relatorio_mai25.pdf
+> ```
+> (O mês do case, `2025-04`, é o padrão e roda offline; outros meses buscam os indicadores ao vivo.)
 
 ## 5. (Opcional) Rodar o grafo Rivet
 
@@ -100,18 +119,25 @@ node --env-file=.env rivet_runner/run_graph.mjs  # 3) roda o grafo (em 03_Rivet/
 ## 6. (Opcional) Conferir os testes
 
 ```bash
-make test       # roda os 42 testes (aritmética conferida ao centavo, anti-regressão)
+make test       # roda os 73 testes (aritmética conferida ao centavo, anti-regressão)
 ```
 
 ---
 
-## Vários clientes (escala) — o ponto central do case
+## Vários clientes (escala), o ponto central do case
 
 O pipeline é **dirigido por dados, não por código**: cada cliente é um JSON em
 `02_Projeto/data/`, com seu próprio cliente **e** assessor. Um comando gera a base inteira:
 
 ```bash
 make batch      # varre data/*.json e gera UMA carta por cliente em Output/
+```
+
+Com os dois clientes do repositório, isso produz **as duas cartas** em `02_Projeto/Output/`:
+
+```
+02_Projeto/Output/albert_da_silva_relatorio_abr25.pdf      # Albert (Conservador)
+02_Projeto/Output/beatriz_almeida_relatorio_abr25.pdf      # Beatriz (Moderado, sintético)
 ```
 
 Para **adicionar um cliente novo**, basta soltar mais um JSON em `data/` (mesmo schema do
@@ -126,7 +152,7 @@ Para **adicionar um cliente novo**, basta soltar mais um JSON em `data/` (mesmo 
   Beatriz Almeida (Moderado, assessora Carla Menezes). `make batch` gera as duas cartas,
   cada uma com seu plano. Os gráficos são isolados por cliente (sem colisão em lote).
 
-É o mesmo `make batch` para 2 ou para milhares de clientes — muda só a pasta `data/`.
+É o mesmo `make batch` para 2 ou para milhares de clientes, muda só a pasta `data/`.
 
 ---
 

@@ -1,4 +1,4 @@
-"""XP house-style visual tokens (emulated — not official XP assets).
+"""XP house-style visual tokens (emulated, not official XP assets).
 
 Palette: XP yellow + black + neutral grays. Centralized here so charts and the
 PDF stay consistent and the brand is easy to re-skin per advisor/white-label.
