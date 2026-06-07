@@ -104,7 +104,8 @@ open Output/albert_da_silva_relatorio_abr25.pdf
 ## 5. (Opcional) Rodar o grafo Rivet
 
 O grafo é a **camada de narração**: lê o `facts.json` produzido pelo motor Python e
-escreve a carta com o Claude. Precisa da chave no `.env`. Rode tudo de `02_Projeto/`:
+escreve a carta com o Claude. Precisa da chave no `.env` e do **Node.js** instalado
+([nodejs.org](https://nodejs.org) → baixe a versão LTS). Rode tudo de `02_Projeto/`:
 
 ```bash
 ./.venv/bin/python -m engine.run --emit-facts   # 1) gera build/facts.json (os fatos)
@@ -243,6 +244,8 @@ start Output\albert_da_silva_relatorio_abr25.pdf
 
 ### 5. (Opcional) Rodar o grafo Rivet
 
+Requer o **Node.js** instalado ([nodejs.org](https://nodejs.org) → baixe a versão LTS).
+
 ```powershell
 .\.venv\Scripts\python -m engine.run --emit-facts        # 1) gera build/facts.json
 cd rivet_runner ; npm install ; cd ..                    # 2) instala o runner Node (uma vez)
@@ -271,8 +274,9 @@ As cartas saem em `02_Projeto\Output\`, uma por cliente.
 
 - **`python` não reconhecido** → reinstale o Python marcando "Add Python to PATH" e
   reabra o PowerShell.
-- **`Scripts\pip` bloqueado por política de execução** → rode antes:
-  `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` e confirme com `S`.
+- **`python` abre a Microsoft Store em vez de rodar** → isso acontece no Windows 11.
+  Vá em **Configurações → Aplicativos → Aliases de execução de aplicativos** e
+  desative as duas entradas do Python. Feche e reabra o PowerShell.
 - **`No such file or directory`** → você não está em `02_Projeto\` (refaça o passo 1).
 - **Erro de API / chave** → confira a chave no `.env`. Sem chave, roda no modo
   determinístico mesmo assim.
