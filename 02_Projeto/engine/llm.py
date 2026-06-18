@@ -26,7 +26,10 @@ def _load_dotenv() -> None:
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = line.split("=", 1)
-        os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+        v = v.strip()
+        if not v.startswith(('"', "'")):
+            v = v.split(" #", 1)[0].rstrip()   # drop inline "# comment" on unquoted values
+        os.environ.setdefault(k.strip(), v.strip('"').strip("'"))
 
 
 _load_dotenv()
